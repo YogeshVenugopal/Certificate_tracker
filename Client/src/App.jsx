@@ -1,10 +1,15 @@
-
-
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import NewEntry from './Pages/NewEntry'
 function App() {
   
   return (
     <>
-      <div className="text-3xl text-red-500">Hello there...!!</div>
+      <Router>
+        <Routes>
+          <Route path="/" element={<NewEntry />} />
+        </Routes>
+      </Router>
     </>
   )
 }
