@@ -1,10 +1,10 @@
 import React from 'react'
-import getInitials from '../Utils/utils'
+import {getInitials} from '../Utils/utils'
 const Header = () => {
-    const name = "Sample Name"
+    const name = "Sample"
   return (
     <>
-        <header className='h-[80px] w-full bg-white flex items-center justify-between px-10 '>
+        <header className='h-[80px] w-full bg-white flex items-center justify-between px-10 shadow-lg z-100'>
             <div className='text-3xl font-bold'>
                 <h1 className='text-black'>KG<span className='text-blue-500'>CAR</span> </h1>
             </div>
