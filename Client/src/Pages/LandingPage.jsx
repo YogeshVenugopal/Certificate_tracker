@@ -15,7 +15,7 @@ const LandingPage = () => {
         <Sidebar />
 
         {/* Dynamic Content */}
-        <div className="flex-1 h-full bg-white border border-red-500">
+        <div className="flex-1 h-full bg-white">
           <Outlet />
         </div>
       </div>

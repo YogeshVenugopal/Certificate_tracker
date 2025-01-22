@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
-
+import sampleImg from '../Assets/sample-removebg-preview.png';
 const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
   const [adminNo, setAdminNo] = useState('');
@@ -73,7 +73,7 @@ const NewEntry = () => {
       <form onSubmit={handleSubmit} className='font-semibold'>
         <div className='flex flex-wrap items-center justify-center w-full h-auto gap-10 mt-5'>
           <div>
-            <label htmlFor="studentName" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="studentName" className="block mb-1 font-bold text-gray-700">
               Student Name:
             </label>
             <input
@@ -87,7 +87,7 @@ const NewEntry = () => {
             />
           </div>
           <div>
-            <label htmlFor="adminNo" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="adminNo" className="block mb-1 font-bold text-gray-700">
               Admin Number:
             </label>
             <input
@@ -101,7 +101,7 @@ const NewEntry = () => {
             />
           </div>
           <div>
-            <label htmlFor="parentName" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="parentName" className="block mb-1 font-bold text-gray-700">
               Parent Name:
             </label>
             <input
@@ -115,7 +115,7 @@ const NewEntry = () => {
             />
           </div>
           <div>
-            <label htmlFor="personalEmail" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="personalEmail" className="block mb-1 font-bold text-gray-700">
               Personal Email:
             </label>
             <input
@@ -129,7 +129,7 @@ const NewEntry = () => {
             />
           </div>
           <div>
-            <label htmlFor="parentNo" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="parentNo" className="block mb-1 font-bold text-gray-700">
               Parent Mobile Number:
             </label>
             <input
@@ -143,7 +143,7 @@ const NewEntry = () => {
             />
           </div>
           <div>
-            <label htmlFor="studentNo" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="studentNo" className="block mb-1 font-bold text-gray-700">
               Student Mobile Number:
             </label>
             <input
@@ -157,7 +157,7 @@ const NewEntry = () => {
             />
           </div>
           <div>
-            <label htmlFor="dept" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="dept" className="block mb-1 font-bold text-gray-700">
               Department:
             </label>
             <select
@@ -178,7 +178,7 @@ const NewEntry = () => {
             </select>
           </div>
           <div>
-            <label htmlFor="quota" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="quota" className="block mb-1 font-bold text-gray-700">
               Quota:
             </label>
             <select
@@ -193,7 +193,7 @@ const NewEntry = () => {
             </select>
           </div>
           <div>
-            <label htmlFor="studies" className="block mb-1 font-medium text-gray-700">
+            <label htmlFor="studies" className="block mb-1 font-bold text-gray-700">
               Studies:
             </label>
             <select
@@ -212,7 +212,7 @@ const NewEntry = () => {
         <div className='flex items-center justify-center w-full'>
           <button
             type="submit"
-            className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 w-[20%] mt-[10%]"
+            className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 w-[20%] mt-[10%] mb-[2%]"
             style={{ display: 'block', marginTop: '20px' }}
           >
             Generate Documents
@@ -223,7 +223,7 @@ const NewEntry = () => {
         <motion.div
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
-          className="absolute px-2 py-3 font-bold text-red-500 bg-white top-2 right-5"
+          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-l-2 border-red-500 rounded top-2 right-5"
         >
           {error}
         </motion.div>
@@ -232,11 +232,48 @@ const NewEntry = () => {
         <motion.div
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
-          className="absolute px-2 py-3 font-bold text-green-500 bg-white top-2 right-5"
+          className="absolute px-3 py-3 font-bold text-green-500 bg-white border-l-2 border-green-500 rounded top-2 right-5"
         >
           {success}
         </motion.div>
       )}
+      <div className='relative flex items-center justify-center w-full h-auto'>
+        <motion.div
+          initial={{y: 100 }}
+          animate={{
+            opacity: 1,
+            y: [0, 10, 0], // Bounce animation
+          }}
+          transition={{
+            duration: 1.5,
+            delay: 0.5,
+            repeat: Infinity, // Keeps the bounce looping
+            repeatType: 'loop',
+          }}
+          className='absolute z-10 flex items-center justify-center w-full text-6xl font-bold text-zinc-500 top-3'
+        >
+          Ready to Generate Document
+        </motion.div>
+
+        <motion.img
+          initial={{ y: -100 }}
+          animate={{
+            opacity: 1,
+            y: [0, -10, 0], // Bounce animation
+          }}
+          transition={{
+            duration: 1.5,
+            delay: 0.5,
+            repeat: Infinity, // Keeps the bounce looping
+            repeatType: 'loop',
+          }}
+          src={sampleImg}
+          alt="Img"
+          className='grayscale'
+        />
+      </div>
+
+
     </>
   );
 };
