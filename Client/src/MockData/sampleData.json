@@ -4,65 +4,409 @@
             "id":1,
             "name":"Pankaj",
             "admission_no":"001",
-            "department":"MECH",
+            "department":"Mech",
+            "parent_name":"sample",
+            "email":"sampel@gmail.com",
+            "parent_no":"0000000000",
+            "student_no":"0000000000",
+            "quota":true,
             "version":"1",
-            "studies":"UG"
+            "studies":"UG",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":2,
             "name":"Alex",
             "admission_no":"002",
             "department":"CSE",
+            "parent_name":"sample",
+            "email":"sampel@gmail.com",
+            "student_no":"0000000000",
+            "parent_no":"0000000000",
+            "quota":true,
             "version":"1",
-            "studies":"LATERAL"
+            "studies":"LATERAL",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":3,
             "name":"Peter",
             "admission_no":"003",
             "department":"IT",
+            "parent_name":"sample",
+            "email":"sampel@gmail.com",
+            "student_no":"0000000000",
+            "parent_no":"0000000000",
+            "quota":true,
             "version":"1",
-            "studies":"PG"
+            "studies":"PG",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1   
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":4,
             "name":"Alan",
             "admission_no":"004",
             "department":"ECE",
+            "parent_name":"sample",
+            "email":"sampel@gmail.com",
+            "student_no":"0000000000",
+            "parent_no":"0000000000",
+            "quota":true,
             "version":"1",
-            "studies":"UG"
+            "studies":"UG",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1  
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":5,
             "name":"Guru",
             "admission_no":"005",
             "department":"AIML",
+            "parent_name":"sample",
+            "email":"sampel@gmail.com",
+            "student_no":"0000000000",
+            "parent_no":"0000000000",
+            "quota":true,
             "version":"1",
-            "studies":"LATERAL"
+            "studies":"LATERAL",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1   
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":6,
             "name":"Vinoth",
             "admission_no":"006",
             "department":"CSE",
+            "email":"sampel@gmail.com",
+            "parent_no":"0000000000",
+            "student_no":"0000000000",
+            "parent_name":"sample",
+            "quota":true,
             "version":"1",
-            "studies":"UG"
+            "studies":"UG",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1  
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":7,
             "name":"Raj",
             "admission_no":"007",
             "department":"CSBS",
+            "parent_name":"sample",
+            "email":"sampel@gmail.com",
+            "student_no":"0000000000",
+            "parent_no":"0000000000",
+            "quota":true,
             "version":"1",
-            "studies":"PG"
+            "studies":"PG",
+            "locked":false,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1  
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         },
         {
             "id":8,
             "name":"Dhiva",
             "admission_no":"008",
             "department":"AIDS",
+            "student_no":"0000000000",
+            "parent_no":"0000000000",
+            "email":"sampel@gmail.com",
             "version":"1",
-            "studies":"PG"
+            "parent_name":"sample",
+            "quota":true,
+            "studies":"PG",
+            "locked":true,
+            "files":[
+                {
+                    "id":1,
+                    "document":"sample",
+                    "original":true,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":2,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":true,
+                    "count":1  
+                },
+                {
+                    "id":3,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":4,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                },
+                {
+                    "id":5,
+                    "document":"sample",
+                    "original":false,
+                    "photocopy":false,
+                    "count":0
+                }
+            ]
         }
     ]
 }

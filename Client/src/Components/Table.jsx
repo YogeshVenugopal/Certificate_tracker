@@ -32,7 +32,7 @@ const Table = ({ type, studentData }) => {
             <th className='w-[30%] text-center'>Student Name</th>
             <th className='w-[20%] text-center'>Admission No.</th>
             <th className='w-[15%] text-center'>Department</th>
-            <th className='w-[15-%] text-center'>Studies</th>
+            <th className='w-[15%] text-center'>Studies</th>
             <th className='w-[10%] text-center'>Action</th>
           </tr>
         </thead>

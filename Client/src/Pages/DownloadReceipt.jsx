@@ -3,6 +3,7 @@ import SearchBar from '../Components/SearchBar'
 import Table from '../Components/Table'
 import studentData from '../MockData/sampleData.json';
 const DownloadReceipt = () => {
+  
   return (
     <div className='py-5'>
       <SearchBar/>
