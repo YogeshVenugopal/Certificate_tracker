@@ -1,8 +1,11 @@
 import React from 'react'
-
+import { useParams } from 'react-router-dom'
 const EditFile = () => {
+  
+  const { id } = useParams();
+  
   return (
-    <div>EditFile</div>
+    <div>{id}</div>
   )
 }
 
