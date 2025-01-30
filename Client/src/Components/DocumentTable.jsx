@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 
-const DocumentTable = ({ studentData, editMode }) => {
-  // Initialize the fileData state using studentData.files
+const DocumentTable = ({ studentData, editMode}) => {
   const [fileData, setFileData] = useState(studentData.files);
 
-  // Handle changes for checkboxes (original and photocopy)
   const handleCheckboxChange = (e, fileId, field) => {
-    const { checked } = e.target;  // Get the checkbox state
+    const { checked } = e.target;  
     setFileData(prevFileData =>
       prevFileData.map(file => {
         if (file.id === fileId) {
-          // If photocopy is being checked, set count to 1 automatically
+          
           if (field === 'photocopy' && checked) {
-            return { ...file, [field]: checked, count: 1 };  // Set count to 1 if photocopy is checked
+            return { ...file, [field]: checked, count: 1 };  
           } else if (field === 'photocopy' && !checked) {
-            return { ...file, [field]: checked, count: '' };  // Optionally reset count when unchecked
+            return { ...file, [field]: checked, count: '' }; 
           } else {
             return { ...file, [field]: checked };
           }
@@ -24,15 +22,18 @@ const DocumentTable = ({ studentData, editMode }) => {
     );
   };
 
-  // Handle changes for count input
+
   const handleCountChange = (e, fileId) => {
-    const { value } = e.target;  // Get the new count value
+    let { value } = e.target;
+    value = Math.max(0, Number(value)); // Ensure count never goes below 0
+  
     setFileData(prevFileData =>
       prevFileData.map(file =>
         file.id === fileId ? { ...file, count: value } : file
       )
     );
   };
+  
 
   return (
     <div className="flex items-center justify-center w-full">
@@ -79,18 +80,18 @@ const DocumentTable = ({ studentData, editMode }) => {
                   file.photocopy ? '✔️' : '❌'
                 )}
               </td>
-              <td>
+              <td className='flex items-center justify-center outline-none'>
                 {editMode && file.photocopy ? (
                   <input
                     type="number"
                     name="count"
                     id={`count-${file.id}`}
-                    className="py-2"
+                    className="w-10 py-2"
                     value={file.count || 1}  // Default to 1 if count is empty or not set
                     onChange={(e) => handleCountChange(e, file.id)}  // Correctly call handleCountChange here
                   />
                 ) : (
-                  file.count
+                  file.count || "-"
                 )}
               </td>
             </tr>

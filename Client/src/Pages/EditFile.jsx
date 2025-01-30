@@ -229,7 +229,7 @@ const EditFile = () => {
 
         </div>
         {/* Edit/Save Button */}
-        <DocumentTable studentData={student} editMode={editMode} />
+        <DocumentTable studentData={student} editMode={editMode} type={"Edit"}/>
         <div className="flex items-center justify-end mx-10 mt-5">
           {
             editMode ?
