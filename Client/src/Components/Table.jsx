@@ -31,8 +31,9 @@ const Table = ({ type, studentData }) => {
             <th className='w-[10%] text-center'>S.No</th>
             <th className='w-[30%] text-center'>Student Name</th>
             <th className='w-[20%] text-center'>Admission No.</th>
-            <th className='w-[15%] text-center'>Department</th>
-            <th className='w-[15%] text-center'>Studies</th>
+            <th className='w-[10%] text-center'>Department</th>
+            <th className='w-[10%] text-center'>Studies</th>
+            <th className='w-[10%] text-center'>Version</th>
             <th className='w-[10%] text-center'>Action</th>
           </tr>
         </thead>
@@ -44,6 +45,7 @@ const Table = ({ type, studentData }) => {
               <td>{student.admission_no}</td>
               <td>{student.department}</td>
               <td>{student.studies}</td>
+              <td>{student.version}</td>
               <td>
                 <h3
                   className='text-blue-500 underline cursor-pointer underline-offset-2 hover:text-blue-700'

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
 import sampleImg from '../Assets/sample-removebg-preview.png';
+import GetDocument from '../Components/GetDocument';
+import document from '../MockData/document.json'
 const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
   const [adminNo, setAdminNo] = useState('');
@@ -14,14 +16,22 @@ const NewEntry = () => {
   const [studentNo, setStudentNo] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
+  const [showTable, setShowTable] = useState(false);
+  const documents = document.documents;
   const setTimeOut = () => {
     setTimeout(() => {
       setError('');
       setSuccess('');
     }, 3000);
   };
-
+  const [selectedDocs, setSelectedDocs] = useState(
+    documents.map((doc) => ({
+      ...doc,
+      original: false,
+      photocopy: false,
+      count: 0,
+    }))
+  );
   const setClearData = () => {
     setStudentName('');
     setAdminNo('');
@@ -62,10 +72,9 @@ const NewEntry = () => {
     };
 
     console.log('Form Data:', formData);
-
+    setShowTable(true);
     setSuccess('Form submitted successfully');
     setTimeOut();
-    setClearData();
   };
 
   return (
@@ -237,7 +246,11 @@ const NewEntry = () => {
           {success}
         </motion.div>
       )}
-      <div className='relative flex items-center justify-center w-full h-auto'>
+      {
+        showTable?
+          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs}/>
+        :
+        <div className='relative flex items-center justify-center w-full h-auto'>
         <motion.div
           initial={{y: 100 }}
           animate={{
@@ -271,7 +284,7 @@ const NewEntry = () => {
           alt="Img"
           className='grayscale'
         />
-      </div>
+      </div>}
 
 
     </>

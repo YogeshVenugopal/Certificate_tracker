@@ -1,0 +1,40 @@
+{
+    "documents": [
+        {
+            "id":1,
+            "document":"sample-1",
+            "original":false,
+            "photocopy":false,
+            "count":0
+        },
+        {
+            "id":2,
+            "document":"sample-2",
+            "original":false,
+            "photocopy":false,
+            "count":0
+        },
+        {
+            "id":3,
+            "document":"sample-3",
+            "original":false,
+            "photocopy":false,
+            "count":0
+        },
+        {
+            "id":4,
+            "document":"sample-4",
+            "original":false,
+            "photocopy":false,
+            "count":0
+        },
+        {
+            "id":5,
+            "document":"sample-5",
+            "original":false,
+            "photocopy":false,
+            "count":0
+        }
+        
+    ]
+}

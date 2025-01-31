@@ -1,8 +1,11 @@
 import React from 'react'
+import FilterBox from '../Components/FilterBox'
 
 const FinalSummary = () => {
   return (
-    <div>FinalSummary</div>
+    <div>
+      <FilterBox/>
+    </div>
   )
 }
 
