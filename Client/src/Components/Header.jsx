@@ -1,7 +1,9 @@
 import React from 'react'
 import {getInitials} from '../Utils/utils'
 import { BiLogOutCircle } from "react-icons/bi";
+import { useNavigate } from 'react-router-dom';
 const Header = () => {
+    const navigate = useNavigate();
     const name = "Sample"
   return (
     <>
@@ -21,7 +23,7 @@ const Header = () => {
                         {getInitials(name)}
                     </h3>
                 </div>
-                <div className='flex items-center gap-2 font-bold cursor-pointer'>
+                <div className='flex items-center gap-2 font-bold cursor-pointer'onClick={() => navigate('/login')}>
                     Logout
                     <BiLogOutCircle size={20}/>
                 </div>
