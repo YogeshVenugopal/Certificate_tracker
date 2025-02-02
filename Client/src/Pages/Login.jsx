@@ -1,63 +1,64 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KiteImg from '../assets/kgkite.png';
+import MessageBox from '../Components/MessageBox';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false); // Loading state
+    const [messages, setMessages] = useState([]); // Store multiple messages
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    const addMessage = (text, status) => {
+        setMessages((prev) => [...prev, { text, status, id: Date.now() }]); // Add unique ID
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setError(''); // Reset error state
-        setLoading(true); // Set loading to true
+        setLoading(true);
 
-        // Basic validation
+        // Validation
         if (!username || !password) {
-            setError('Please enter both username and password.');
+            addMessage('Please enter both username and password.', 'error');
             setLoading(false);
             return;
         }
 
-        if (password.length < 4) {
-            setError('Password must be at least 6 characters long.');
-            setLoading(false);
-            return;
-        }
         try {
             const response = await fetch('http://localhost:3000/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                // console.log(data);
-                localStorage.setItem('user', JSON.stringify(data.username));
-                navigate('/new-entry'); // Redirect to home page after successful login
+                localStorage.setItem('user', JSON.stringify(data.username)); 
+                addMessage('Login successful! Redirecting...', 'success');
+
+                setTimeout(() => {
+                    navigate('/new-entry');
+                }, 1500);
             } else {
-                setError(data.error || 'Invalid credentials');
+                addMessage(data.error || 'Invalid credentials', 'error');
             }
         } catch (error) {
-            setError('Server error. Please try again later.');
+            addMessage('Server error. Please try again later.', 'error');
         } finally {
-            setLoading(false); // Reset loading state
+            setLoading(false);
         }
     };
 
     return (
         <div className='flex flex-col w-full h-screen'>
             <header className='w-full h-[80px] border-b border-gray-300 flex justify-between px-10 items-center'>
-                <h2 className='text-3xl font-bold'>KG
-                    <span className='text-blue-500'>CAR</span>
+                <h2 className='text-3xl font-bold'>
+                    KG <span className='text-blue-500'>CAR</span>
                 </h2>
             </header>
+
             <section className='h-[calc(100vh-80px)] w-full flex justify-center items-center'>
                 <div className='w-[60%] h-[70%] border border-gray-300 rounded flex shadow-lg overflow-hidden'>
                     <div className='w-[50%] h-full flex justify-center items-center'>
@@ -66,7 +67,13 @@ const Login = () => {
 
                     <div className='w-[50%] h-full flex flex-col justify-center items-center p-5'>
                         <h2 className='mb-5 text-2xl font-bold'>Login Now...!</h2>
-                        
+
+                        {/* Display multiple MessageBoxes */}
+                        <div className="absolute flex flex-col gap-2 transform -translate-x-1/2 top-5 left-1/2">
+                            {messages.map((msg) => (
+                                <MessageBox key={msg.id} message={msg.text} status={msg.status} />
+                            ))}
+                        </div>
 
                         <form className='w-[80%] space-y-7' onSubmit={handleLogin}>
                             <div className='flex flex-col gap-3'>
@@ -89,15 +96,16 @@ const Login = () => {
                                     className='w-full h-[40px] outline-none border border-gray-300 rounded-lg px-3'
                                 />
                             </div>
-                            {error && <p className='mb-3 text-red-500'>{error}</p>}
+
                             <button
                                 type='submit'
-                                disabled={loading} // Disable button when loading
+                                disabled={loading}
                                 className='w-full h-[40px] rounded-lg px-3 font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300'
                             >
                                 {loading ? 'Logging in...' : 'Login'}
                             </button>
-                            <p>Forgot account Name or Password? <span className='text-blue-500 cursor-pointer'>Contact Admin</span></p>
+
+                            <p>Forgot account name or password? <span className='text-blue-500 cursor-pointer'>Contact Admin</span></p>
                         </form>
                     </div>
                 </div>
