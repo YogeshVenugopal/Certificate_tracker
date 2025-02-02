@@ -8,14 +8,16 @@ const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
   const [adminNo, setAdminNo] = useState('');
   const [parentName, setParentName] = useState('');
-  const [dept, setDept] = useState('Computer Science');
-  const [quota, setQuota] = useState('General');
-  const [studies, setStudies] = useState('UG');
+  const [dept, setDept] = useState('');
+  const [quota, setQuota] = useState('');
+  const [studies, setStudies] = useState('');
   const [personalEmail, setPersonalEmail] = useState('');
   const [parentNo, setParentNo] = useState('');
   const [studentNo, setStudentNo] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [firstGraduation, setFirstGraduation] = useState('');
+  const [diploma, setDiploma] = useState('');
   const [showTable, setShowTable] = useState(false);
   const documents = document.documents;
   const setTimeOut = () => {
@@ -36,9 +38,9 @@ const NewEntry = () => {
     setStudentName('');
     setAdminNo('');
     setParentName('');
-    setDept('Computer Science');
-    setQuota('General');
-    setStudies('UG');
+    setDept('');
+    setQuota('');
+    setStudies('');
     setPersonalEmail('');
     setParentNo('');
     setStudentNo('');
@@ -65,9 +67,11 @@ const NewEntry = () => {
       parentName,
       dept,
       quota,
+      firstGraduation: quota === 'MQ' && studies === 'UG' ? firstGraduation : null,
       studies,
       personalEmail,
       parentNo,
+      diploma: studies === 'PG_ME' ? diploma : null,
       studentNo,
     };
 
@@ -176,6 +180,7 @@ const NewEntry = () => {
               value={dept}
               onChange={(e) => setDept(e.target.value)}
             >
+              <option value="">Select Department</option>
               <option value="CSE">CSE</option>
               <option value="AIDS">AIDS</option>
               <option value="ECE">ECE</option>
@@ -197,6 +202,7 @@ const NewEntry = () => {
               value={quota}
               onChange={(e) => setQuota(e.target.value)}
             >
+              <option value="">Select Quota</option>
               <option value="MQ">Management Quota</option>
               <option value="GQ">Government Quota</option>
             </select>
@@ -212,11 +218,45 @@ const NewEntry = () => {
               value={studies}
               onChange={(e) => setStudies(e.target.value)}
             >
+              <option value="">Select Studies</option>
               <option value="UG">UG</option>
-              <option value="PG">PG</option>
+              <option value="PG_MBA">PG - MBA</option>
+              <option value="PG_ME">PG - ME</option>
               <option value="Lateral">Lateral</option>
             </select>
           </div>
+          {quota === "MQ" && (studies === "UG" || studies === "Lateral") && (<div>
+            <label htmlFor="firstGraduation" className="block mb-1 font-bold text-gray-700">
+              First Graduation:
+            </label>
+            <select
+              className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
+              name="firstGraduation"
+              id="firstGraduation"
+              value={firstGraduation}
+              onChange={(e) => setFirstGraduation(e.target.value)}
+            >
+              <option value="">Select Option</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>)}
+          {studies === "PG_ME" && (<div>
+            <label htmlFor="firstGraduation" className="block mb-1 font-bold text-gray-700">
+              Diploma:
+            </label>
+            <select
+              className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
+              name="diploma"
+              id="diploma"
+              value={diploma}
+              onChange={(e) => setDiploma(e.target.value)}
+            >
+              <option value="">Select Option</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>)}
         </div>
         <div className='flex items-center justify-center w-full'>
           <button
@@ -247,44 +287,44 @@ const NewEntry = () => {
         </motion.div>
       )}
       {
-        showTable?
-          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs}/>
-        :
-        <div className='relative flex items-center justify-center w-full h-auto'>
-        <motion.div
-          initial={{y: 100 }}
-          animate={{
-            opacity: 1,
-            y: [0, 10, 0], // Bounce animation
-          }}
-          transition={{
-            duration: 1.5,
-            delay: 0.5,
-            repeat: Infinity, // Keeps the bounce looping
-            repeatType: 'loop',
-          }}
-          className='absolute z-10 flex items-center justify-center w-full text-6xl font-bold text-zinc-500 top-3'
-        >
-          Ready to Generate Document
-        </motion.div>
+        showTable ?
+          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs} />
+          :
+          <div className='relative flex items-center justify-center w-full h-auto'>
+            <motion.div
+              initial={{ y: 100 }}
+              animate={{
+                opacity: 1,
+                y: [0, 10, 0], // Bounce animation
+              }}
+              transition={{
+                duration: 1.5,
+                delay: 0.5,
+                repeat: Infinity, // Keeps the bounce looping
+                repeatType: 'loop',
+              }}
+              className='absolute z-10 flex items-center justify-center w-full text-6xl font-bold text-zinc-500 top-3'
+            >
+              Ready to Generate Document
+            </motion.div>
 
-        <motion.img
-          initial={{ y: -100 }}
-          animate={{
-            opacity: 1,
-            y: [0, -10, 0], // Bounce animation
-          }}
-          transition={{
-            duration: 1.5,
-            delay: 0.5,
-            repeat: Infinity, // Keeps the bounce looping
-            repeatType: 'loop',
-          }}
-          src={sampleImg}
-          alt="Img"
-          className='grayscale'
-        />
-      </div>}
+            <motion.img
+              initial={{ y: -100 }}
+              animate={{
+                opacity: 1,
+                y: [0, -10, 0], // Bounce animation
+              }}
+              transition={{
+                duration: 1.5,
+                delay: 0.5,
+                repeat: Infinity, // Keeps the bounce looping
+                repeatType: 'loop',
+              }}
+              src={sampleImg}
+              alt="Img"
+              className='grayscale'
+            />
+          </div>}
 
 
     </>
