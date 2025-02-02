@@ -21,34 +21,34 @@ const Login = () => {
             return;
         }
 
-        if (password.length < 6) {
+        if (password.length < 4) {
             setError('Password must be at least 6 characters long.');
             setLoading(false);
             return;
         }
-        navigate('/new-entry');
-        // try {
-        //     const response = await fetch('http://127.0.0.1:8000/api/login/', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({ username, password }),
-        //     });
+        try {
+            const response = await fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
 
-        //     const data = await response.json();
+            const data = await response.json();
 
-        //     if (response.ok) {
-        //         alert('Login successful');
-        //         navigate('/new-entry'); // Redirect to home page after successful login
-        //     } else {
-        //         setError(data.error || 'Invalid credentials');
-        //     }
-        // } catch (error) {
-        //     setError('Server error. Please try again later.');
-        // } finally {
-        //     setLoading(false); // Reset loading state
-        // }
+            if (response.ok) {
+                console.log(data);
+                localStorage.setItem('user', JSON.stringify(data.username));
+                navigate('/new-entry'); // Redirect to home page after successful login
+            } else {
+                setError(data.error || 'Invalid credentials');
+            }
+        } catch (error) {
+            setError('Server error. Please try again later.');
+        } finally {
+            setLoading(false); // Reset loading state
+        }
     };
 
     return (

@@ -7,7 +7,7 @@ const LandingPage = () => {
   return (
     <div className="bg-[#E5E5E5] w-full h-screen">
       {/* Header */}
-      <Header />
+      <Header user={"sample"}/>
 
       {/* Sidebar and Main Content */}
       <div className="flex w-full h-[calc(100vh-80px)]">
