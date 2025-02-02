@@ -38,7 +38,7 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                console.log(data);
+                // console.log(data);
                 localStorage.setItem('user', JSON.stringify(data.username));
                 navigate('/new-entry'); // Redirect to home page after successful login
             } else {

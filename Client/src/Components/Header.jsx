@@ -4,6 +4,9 @@ import { BiLogOutCircle } from "react-icons/bi";
 import { useNavigate } from 'react-router-dom';
 const Header = ({user}) => {
     const navigate = useNavigate();
+    const handlelogout = () => () => {
+        localStorage.clear();
+        navigate('/')};
     const name = user
   return (
     <>
@@ -23,7 +26,7 @@ const Header = ({user}) => {
                         {getInitials(name)}
                     </h3>
                 </div>
-                <div className='flex items-center gap-2 font-bold cursor-pointer'onClick={() => navigate('/')}>
+                <div className='flex items-center gap-2 font-bold cursor-pointer'onClick={handlelogout()}>
                     Logout
                     <BiLogOutCircle size={20}/>
                 </div>

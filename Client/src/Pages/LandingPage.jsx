@@ -4,10 +4,11 @@ import Sidebar from '../Components/Sidebar';
 import { Outlet } from 'react-router-dom';
 
 const LandingPage = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
   return (
     <div className="bg-[#E5E5E5] w-full h-screen">
       {/* Header */}
-      <Header user={"sample"}/>
+      <Header user={user}/>
 
       {/* Sidebar and Main Content */}
       <div className="flex w-full h-[calc(100vh-80px)]">
