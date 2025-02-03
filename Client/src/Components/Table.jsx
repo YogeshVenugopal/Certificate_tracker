@@ -17,7 +17,10 @@ const Table = ({ type, studentData }) => {
       setPageCount(Math.ceil(studentData.studentsdata.length / itemsPerPage));
     }
   }, [itemOffset, studentData]);
-
+ const editUrl = (student_id) => {
+   const currentUrl = window.location.pathname;
+   return currentUrl.replace('/edit-student', `/edit/${student_id}`);
+ }
   const handlePageClick = (event) => {
     const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
@@ -50,7 +53,7 @@ const Table = ({ type, studentData }) => {
                 <h3
                   className='text-blue-500 underline cursor-pointer underline-offset-2 hover:text-blue-700'
                   onClick={() => 
-                    type === "Edit"? navigate(`/edit/${student.admission_no}`) : console.log("Download")}
+                    type === "Edit"? navigate(`${editUrl(student.id)}`) : console.log("Download")}
                 >
                   {type}
                 </h3>

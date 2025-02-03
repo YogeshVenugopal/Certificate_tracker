@@ -93,7 +93,7 @@ const GetDocument = ({ selectedDocs, setSelectedDocs }) => {
 
       <button
         onClick={handleSubmit}
-        className="px-6 py-2 mt-4 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+        className="px-6 py-2 my-4 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600"
       >
         Create Student
       </button>

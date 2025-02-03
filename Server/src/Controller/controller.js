@@ -46,3 +46,57 @@ export const login = async(req,res)=>{
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+export const createStudents = async (req, res) => {
+    try {
+        const {
+            name,
+            admission_number,
+            parent_name,
+            department,
+            quota,
+            studies,
+            email,
+            parent_no,
+            student_no,
+            first_graduate,
+            diploma,
+            files
+        } = req.body;
+
+        // Validate required fields
+        if (!name || !admission_number || !parent_name || !department || !quota || !studies || !email || !parent_no || !student_no) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        const filesJson = JSON.stringify(files);
+        const query = `
+            INSERT INTO students (
+                name, admission_number, parent_name, department, quota, studies, 
+                email, parent_no, student_no, first_graduate, diploma, files
+            ) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+            RETURNING *;
+        `;
+        
+        const values = [
+            name,
+            admission_number,
+            parent_name,
+            department,
+            quota,
+            studies,
+            email,
+            parent_no,
+            student_no,
+            first_graduate,
+            diploma,
+            filesJson
+        ];
+
+        const { rows } = await pool.query(query, values);
+        res.status(201).json({ message: 'Student created successfully', student: rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
