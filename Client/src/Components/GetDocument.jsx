@@ -1,64 +1,68 @@
-import React, { useState } from "react";
-
-const GetDocument = ({ selectedDocs, setSelectedDocs}) => {
-  // Sample JSON Data (only document names)
-//   const [documents, setDocuments] = useState([
-//     { id: 1, document: "sample-1" },
-//     { id: 2, document: "sample-2" },
-//     { id: 3, document: "sample-3" },
-//     { id: 4, document: "sample-4" },
-//     { id: 5, document: "sample-5" }
-//   ]);
-
-  // State to track selected values
-  
-
-  // Handle checkbox change
+import React from "react";
+const DocumentRow = ({ doc, index, handleCheckboxChange, handleCountChange }) => {
+  return (
+    <tr className="text-center bg-gray-50 even:bg-gray-100">
+      <td className="h-[50px]">{index + 1}</td>
+      <td className="h-[50px]">{doc.name}</td>
+      <td className="h-[50px]">
+        <input
+          className="w-5 h-5"
+          type="checkbox"
+          checked={doc.original || false}
+          onChange={() => handleCheckboxChange(doc.id, "original")}
+        />
+      </td>
+      <td className="h-[50px]">
+        <input
+          className="w-5 h-5"
+          type="checkbox"
+          checked={doc.photocopy || false}
+          onChange={() => handleCheckboxChange(doc.id, "photocopy")}
+        />
+      </td>
+      <td className="h-[50px]">
+        {doc.photocopy ? (
+          <input
+            type="number"
+            min="1"
+            value={doc.count || 1}
+            onChange={(e) => handleCountChange(doc.id, Number(e.target.value))}
+            className="w-16 text-center border border-gray-400"
+          />
+        ) : (
+          <span className="text-gray-500">0</span>
+        )}
+      </td>
+    </tr>
+  );
+};
+const GetDocument = ({ selectedDocs, setSelectedDocs }) => {
   const handleCheckboxChange = (id, field) => {
     setSelectedDocs((prevDocs) =>
       prevDocs.map((doc) =>
         doc.id === id
           ? {
               ...doc,
-              [field]: !doc[field],
+              [field]: !doc[field], // Toggle the specific field (original or photocopy)
               count: field === "photocopy" && !doc.photocopy ? 1 : doc.count, // Set count to 1 if photocopy is checked
             }
           : doc
       )
     );
   };
-
-  // Handle count change (prevent count below 1 when photocopy is selected)
+  
   const handleCountChange = (id, value) => {
     setSelectedDocs((prevDocs) =>
       prevDocs.map((doc) =>
         doc.id === id && doc.photocopy
-          ? { ...doc, count: value < 1 ? 1 : value }
+          ? { ...doc, count: Math.max(1, value) } // Ensure count is at least 1
           : doc
       )
     );
   };
-
-  // Handle form submission
+  
   const handleSubmit = async () => {
-    // try {
-    //   const response = await fetch("http://127.0.0.1:8000/student/create", {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(selectedDocs),
-    //   });
-
-    //   if (response.ok) {
-    //     alert("Student created successfully!");
-    //   } else {
-    //     alert("Failed to create student.");
-    //   }
-    // } catch (error) {
-    //   console.error("Error:", error);
-    //   alert("An error occurred.");
-    // }
+    console.log("Selected Docs:", selectedDocs);
   };
 
   return (
@@ -75,44 +79,18 @@ const GetDocument = ({ selectedDocs, setSelectedDocs}) => {
         </thead>
         <tbody>
           {selectedDocs.map((doc, index) => (
-            <tr key={doc.id} className="text-center bg-gray-50 even:bg-gray-100">
-              <td className="h-[50px]">{index + 1}</td>
-              <td className="h-[50px]">{doc.document}</td>
-              <td className="h-[50px]">
-                <input
-                  className="w-5 h-5"
-                  type="checkbox"
-                  checked={doc.original}
-                  onChange={() => handleCheckboxChange(doc.id, "original")}
-                />
-              </td>
-              <td className="h-[50px]">
-                <input
-                  className="w-5 h-5"
-                  type="checkbox"
-                  checked={doc.photocopy}
-                  onChange={() => handleCheckboxChange(doc.id, "photocopy")}
-                />
-              </td>
-              <td className="h-[50px]">
-                {doc.photocopy ? (
-                  <input
-                    type="number"
-                    min="1"
-                    value={doc.count}
-                    onChange={(e) => handleCountChange(doc.id, Number(e.target.value))}
-                    className="w-16 text-center border border-gray-400"
-                  />
-                ) : (
-                  <span className="text-gray-500">0</span> // Show "0" instead of input box
-                )}
-              </td>
-            </tr>
+            <DocumentRow
+              key={index} // Use the index as key (not ideal for long-term use)
+              doc={doc}
+              index={index}
+              handleCheckboxChange={handleCheckboxChange}
+              handleCountChange={handleCountChange}
+            />
           ))}
+
         </tbody>
       </table>
 
-      {/* Create Student Button */}
       <button
         onClick={handleSubmit}
         className="px-6 py-2 mt-4 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600"

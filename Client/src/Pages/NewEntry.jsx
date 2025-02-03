@@ -3,11 +3,11 @@ import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
 import sampleImg from '../Assets/sample-removebg-preview.png';
 import GetDocument from '../Components/GetDocument';
-import document from '../MockData/document.json'
 const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
   const [adminNo, setAdminNo] = useState('');
   const [parentName, setParentName] = useState('');
+  const [loading, setLoading] = useState(false);
   const [dept, setDept] = useState('');
   const [quota, setQuota] = useState('');
   const [studies, setStudies] = useState('');
@@ -19,31 +19,64 @@ const NewEntry = () => {
   const [firstGraduation, setFirstGraduation] = useState('');
   const [diploma, setDiploma] = useState('');
   const [showTable, setShowTable] = useState(false);
-  const documents = document.documents;
+  const [documents, setDocuments] = useState([]);
+  const [selectedDocs, setSelectedDocs] = useState([]);
+
+
+ const fetchDocuments = async (document) => {
+    setLoading(true);
+    try {
+        const response = await fetch(`http://localhost:3000/documents/${document}`);
+        if (!response.ok) throw new Error('Failed to fetch documents');
+        const data = await response.json();
+
+        if (data.length === 0 || !data[0][document]) {
+            throw new Error('No documents found');
+        }
+
+        // Extract document names dynamically based on category
+        const documentNames = data[0][document];
+
+        // Format documents with default properties
+        const formattedDocs = documentNames.map((docName, index) => ({
+            id: index,
+            name: docName, 
+            original: false, 
+            photocopy: false, 
+            count: 0
+        }));
+
+        setDocuments(formattedDocs);
+        setSelectedDocs(formattedDocs);
+    } catch (error) {
+        console.error('Error fetching documents:', error);
+        setError('Failed to load documents.');
+    } finally {
+        setLoading(false);
+    }
+};
+
+
   const setTimeOut = () => {
     setTimeout(() => {
       setError('');
       setSuccess('');
     }, 3000);
   };
-  const [selectedDocs, setSelectedDocs] = useState(
-    documents.map((doc) => ({
-      ...doc,
-      original: false,
-      photocopy: false,
-      count: 0,
-    }))
-  );
-  const setClearData = () => {
-    setStudentName('');
-    setAdminNo('');
-    setParentName('');
-    setDept('');
-    setQuota('');
-    setStudies('');
-    setPersonalEmail('');
-    setParentNo('');
-    setStudentNo('');
+  const determineDocCategory = (studies, quota, firstGraduation, diploma) => {
+    if (studies === 'UG' && quota === 'GQ' && !firstGraduation) return 'ug_plain_mq';
+    if (studies === 'UG' && quota === 'GQ' && firstGraduation) return 'ug_gq_fg';
+    if (studies === 'UG' && quota === 'MQ') return 'ug_mq';
+    if (studies === 'LATERAL' && quota === 'GQ' && !firstGraduation) return 'lateral_plain_mq';
+    if (studies === 'LATERAL' && quota === 'GQ' && firstGraduation) return 'lateral_gq_fg';
+    if (studies === 'LATERAL' && quota === 'MQ') return 'lateral_mq';
+    if (studies === 'PG_MBA' && quota === 'GQ') return 'pg_mba_gq';
+    if (studies === 'PG_MBA' && quota === 'MQ') return 'pg_mba_mq';
+    if (studies === 'PG_ME' && quota === 'GQ' && !diploma) return 'pg_me_gq';
+    if (studies === 'PG_ME' && quota === 'MQ' && !diploma) return 'pg_me_mq';
+    if (studies === 'PG_ME' && quota === 'GQ' && diploma) return 'pg_me_dp_gq';
+    if (studies === 'PG_ME' && quota === 'MQ' && diploma) return 'pg_me_dp_mq';
+    return null;
   };
 
   const handleSubmit = (e) => {
@@ -60,22 +93,16 @@ const NewEntry = () => {
       setTimeOut();
       return;
     }
-
-    const formData = {
-      studentName,
-      adminNo,
-      parentName,
-      dept,
-      quota,
-      firstGraduation: quota === 'MQ' && studies === 'UG' ? firstGraduation : null,
-      studies,
-      personalEmail,
-      parentNo,
-      diploma: studies === 'PG_ME' ? diploma : null,
-      studentNo,
-    };
-
-    console.log('Form Data:', formData);
+    const docCategory = determineDocCategory(studies, quota, firstGraduation, diploma);
+    if (docCategory) {
+      fetchDocuments(docCategory);
+      setShowTable(true);
+      setSuccess('Form submitted successfully');
+    } else {
+      setError('Failed to fetch documents');
+    }
+    setTimeOut();
+    
     setShowTable(true);
     setSuccess('Form submitted successfully');
     setTimeOut();
@@ -225,7 +252,7 @@ const NewEntry = () => {
               <option value="Lateral">Lateral</option>
             </select>
           </div>
-          {quota === "MQ" && (studies === "UG" || studies === "Lateral") && (<div>
+          {quota === "GQ" && (studies === "UG" || studies === "Lateral") && (<div>
             <label htmlFor="firstGraduation" className="block mb-1 font-bold text-gray-700">
               First Graduation:
             </label>
@@ -285,6 +312,17 @@ const NewEntry = () => {
         >
           {success}
         </motion.div>
+      )}
+      {loading && (
+        <div className="flex items-center justify-center mt-10">
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1.1 }}
+            transition={{ repeat: Infinity, duration: 0.5 }}
+            className="w-10 h-10 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"
+          />
+          <p className="ml-2 font-semibold text-blue-500">Fetching Documents...</p>
+        </div>
       )}
       {
         showTable ?

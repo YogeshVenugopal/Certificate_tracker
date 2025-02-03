@@ -15,7 +15,7 @@ const Sidebar = () => {
         {/* New Entry - Uses 'end' to match exactly "/new-entry" */}
         <NavLink
           to="/new-entry"
-          end  // ✅ Ensures exact match, preventing activation for child routes
+          end  
           className={({ isActive }) => (isActive ? `${activeStyle} ${baseStyle}` : baseStyle)}
         >
           New Entry
