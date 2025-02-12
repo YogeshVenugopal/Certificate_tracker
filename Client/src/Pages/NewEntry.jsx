@@ -16,8 +16,8 @@ const NewEntry = () => {
   const [studentNo, setStudentNo] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [firstGraduation, setFirstGraduation] = useState('');
-  const [diploma, setDiploma] = useState('');
+  const [firstGraduation, setFirstGraduation] = useState(null);
+  const [diploma, setDiploma] = useState(null);
   const [showTable, setShowTable] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [selectedDocs, setSelectedDocs] = useState([]);
@@ -79,6 +79,73 @@ const NewEntry = () => {
     return null;
   };
 
+  const clearData = () => {
+    setStudentName('');
+    setAdminNo('');
+    setParentName('');
+    setDept('');
+    setQuota('');
+    setStudies('');
+    setPersonalEmail('');
+    setParentNo('');
+    setStudentNo('');
+    setError('');
+    setSuccess('');
+    setFirstGraduation('');
+    setDiploma('');
+    setShowTable(false);
+    setDocuments([]);
+    setSelectedDocs([]);  
+    
+  }
+  const handleSubmitStudent = async () => {
+    const studentData = {
+      name: studentName,
+      admission_no: adminNo,
+      parent_name: parentName,
+      email: personalEmail,
+      parent_no: parentNo,
+      student_no: studentNo,
+      department: dept,
+      quota: quota,
+      studies: studies,
+      files: selectedDocs
+    };
+    if (studies === 'UG' || studies === 'PG') {
+      if (quota === 'MQ') {
+        studentData.first_graduate = firstGraduation;
+      }
+    }
+    
+    if (studies === 'PG_ME') {
+      studentData.diploma = diploma; 
+    }
+    
+  
+    console.log(studentData);
+  
+    try {
+      const response = await fetch('http://localhost:3000/create-student', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(studentData)
+      });
+  
+      if (response.ok) {
+        setSuccess('Student created successfully');
+        clearData(); // Make sure this clears all relevant form data
+      } else {
+        const errorMessage = await response.text();
+        setError(`Failed to create student: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error("Error submitting student data:", error);
+      setError('An unexpected error occurred');
+    }
+  };
+  
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -128,7 +195,7 @@ const NewEntry = () => {
           </div>
           <div>
             <label htmlFor="adminNo" className="block mb-1 font-bold text-gray-700">
-              Admin Number:
+              Admission Number:
             </label>
             <input
               className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
@@ -326,7 +393,7 @@ const NewEntry = () => {
       )}
       {
         showTable ?
-          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs} />
+          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs} handleSubmitStudent={handleSubmitStudent}/>
           :
           <div className='relative flex items-center justify-center w-full h-auto'>
             <motion.div

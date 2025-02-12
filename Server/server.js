@@ -1,39 +1,24 @@
 import express from 'express';
-import cors from 'cors';
-import pool from './src/Middlewares/db.js';
 import dotenv from 'dotenv';
-import router from './src/Routes/route.js';
+import pool from './Config/db.js';
+import cors from 'cors';
+import router from './Routes/routes.js';
+
 dotenv.config();
-
-
 const app = express();
-const port = process.env.PORT || 3000;
 
-// Middleware
-app.use(express.json()); // Parse JSON request bodies
-app.use(cors({origin: '*'})); // Enable CORS for all routes
-
-// route
-app.use(router)
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server started on http://localhost:${port}`);
+app.use(express.json());
+app.use(cors());
+app.listen(process.env.SERVER_PORT, () => {
+    console.log(`Server is running on port ${process.env.SERVER_PORT}`);
 });
 
+app.use(router);
 
-// Connect to the database
-// pool.connect()
-//   .then(() => {
-//     console.log('DB connected :)');
-//   })
-//   .catch((err) => {
-//     console.error('Error connecting to the database:', err);
-//   });
 pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-  } else {
-    console.log('Database connected successfully:', res.rows[0].now);
-  }
-});
+    if (err) {
+      console.error('Error connecting to the database:', err);
+    } else {
+      console.log('Database connected successfully:', res.rows[0]);
+    }
+  });

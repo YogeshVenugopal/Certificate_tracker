@@ -36,7 +36,7 @@ const DocumentRow = ({ doc, index, handleCheckboxChange, handleCountChange }) =>
     </tr>
   );
 };
-const GetDocument = ({ selectedDocs, setSelectedDocs }) => {
+const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent }) => {
   const handleCheckboxChange = (id, field) => {
     setSelectedDocs((prevDocs) =>
       prevDocs.map((doc) =>
@@ -61,9 +61,7 @@ const GetDocument = ({ selectedDocs, setSelectedDocs }) => {
     );
   };
   
-  const handleSubmit = async () => {
-    console.log("Selected Docs:", selectedDocs);
-  };
+  
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-auto">
@@ -92,7 +90,7 @@ const GetDocument = ({ selectedDocs, setSelectedDocs }) => {
       </table>
 
       <button
-        onClick={handleSubmit}
+        onClick={handleSubmitStudent}
         className="px-6 py-2 my-4 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600"
       >
         Create Student
