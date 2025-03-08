@@ -64,6 +64,7 @@ const NewEntry = () => {
     } catch (error) {
         console.error('Error fetching documents:', error);
         setError(error.message);
+        setTimeOut();
     } finally {
         setLoading(false);
     }
@@ -109,7 +110,6 @@ const NewEntry = () => {
     setShowTable(false);
     setDocuments([]);
     setSelectedDocs([]);  
-    
   }
   const handleSubmitStudent = async () => {
     const studentData = {
@@ -117,8 +117,8 @@ const NewEntry = () => {
       admission_no: adminNo,
       parent_name: parentName,
       email: personalEmail,
-      parent_no: parentNo,
-      student_no: studentNo,
+      parent_no: parseInt(parentNo, 10),
+      student_no: parseInt(studentNo, 10),
       department: dept,
       quota: quota,
       studies: studies,

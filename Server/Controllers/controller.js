@@ -114,7 +114,6 @@ export const createStudent = async (req, res) => {
                     continue;
                 }
 
-                if (!file.original && !file.photocopy && file.count === 0) continue;
 
                 await pool.query(
                     'INSERT INTO "record" (student, original, photocopy, count, ver, date) VALUES ($1, $2, $3, $4, $5, NOW())',
@@ -133,3 +132,16 @@ export const createStudent = async (req, res) => {
 
     }   
 };
+
+export const deleteAllData = async (req, res) => {
+    try {
+        await pool.query("TRUNCATE TABLE 'student_info' CASCADE");
+        await pool.query("TRUNCATE TABLE 'record' CASCADE");
+        await pool.query("TRUNCATE TABLE 'versions' CASCADE");
+        await pool.query("TRUNCATE TABLE 'student' CASCADE");
+        res.status(200).json({ message: "All data deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting data:", error);
+        res.status(500).json({ error: "Failed to delete data" });
+    }
+}   
