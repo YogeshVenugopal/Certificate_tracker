@@ -12,8 +12,8 @@ const NewEntry = () => {
   const [quota, setQuota] = useState('');
   const [studies, setStudies] = useState('');
   const [personalEmail, setPersonalEmail] = useState('');
-  const [parentNo, setParentNo] = useState('');
-  const [studentNo, setStudentNo] = useState('');
+  const [parentNo, setParentNo] = useState(0);
+  const [studentNo, setStudentNo] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [firstGraduation, setFirstGraduation] = useState(null);
@@ -23,26 +23,39 @@ const NewEntry = () => {
   const [selectedDocs, setSelectedDocs] = useState([]);
 
 
- const fetchDocuments = async (document) => {
+  const fetchDocuments = async (document) => {
+    if (!document) {
+        setError('Invalid document category');
+        setLoading(false);
+        return;
+    }
+    console.log(document);
     setLoading(true);
     try {
-        const response = await fetch(`http://localhost:3000/documents/${document}`);
+        const response = await fetch(`http://localhost:3000/getDocument/${document}`);
         if (!response.ok) throw new Error('Failed to fetch documents');
-        const data = await response.json();
 
-        if (data.length === 0 || !data[0][document]) {
+        const result = await response.json();
+        console.log('API Response:', result);
+
+        // Check if 'data' array exists and contains at least one object
+        if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
             throw new Error('No documents found');
         }
 
-        // Extract document names dynamically based on category
-        const documentNames = data[0][document];
+        // Extract documents from 'file' key
+        const documentNames = result.data[0].file;
 
-        // Format documents with default properties
+        if (!documentNames || !Array.isArray(documentNames) || documentNames.length === 0) {
+            throw new Error('No documents found');
+        }
+
+        // Format documents
         const formattedDocs = documentNames.map((docName, index) => ({
             id: index,
-            name: docName, 
-            original: false, 
-            photocopy: false, 
+            name: docName,
+            original: false,
+            photocopy: false,
             count: 0
         }));
 
@@ -50,7 +63,7 @@ const NewEntry = () => {
         setSelectedDocs(formattedDocs);
     } catch (error) {
         console.error('Error fetching documents:', error);
-        setError('Failed to load documents.');
+        setError(error.message);
     } finally {
         setLoading(false);
     }
@@ -64,18 +77,18 @@ const NewEntry = () => {
     }, 3000);
   };
   const determineDocCategory = (studies, quota, firstGraduation, diploma) => {
-    if (studies === 'UG' && quota === 'GQ' && !firstGraduation) return 'ug_plain_mq';
-    if (studies === 'UG' && quota === 'GQ' && firstGraduation) return 'ug_gq_fg';
-    if (studies === 'UG' && quota === 'MQ') return 'ug_mq';
-    if (studies === 'LATERAL' && quota === 'GQ' && !firstGraduation) return 'lateral_plain_mq';
-    if (studies === 'LATERAL' && quota === 'GQ' && firstGraduation) return 'lateral_gq_fg';
-    if (studies === 'LATERAL' && quota === 'MQ') return 'lateral_mq';
-    if (studies === 'PG_MBA' && quota === 'GQ') return 'pg_mba_gq';
-    if (studies === 'PG_MBA' && quota === 'MQ') return 'pg_mba_mq';
-    if (studies === 'PG_ME' && quota === 'GQ' && !diploma) return 'pg_me_gq';
-    if (studies === 'PG_ME' && quota === 'MQ' && !diploma) return 'pg_me_mq';
-    if (studies === 'PG_ME' && quota === 'GQ' && diploma) return 'pg_me_dp_gq';
-    if (studies === 'PG_ME' && quota === 'MQ' && diploma) return 'pg_me_dp_mq';
+    if (studies === 'UG' && quota === 'GQ' && !firstGraduation) return 'UG+GQ';
+    if (studies === 'UG' && quota === 'GQ' && firstGraduation) return 'UG+GQ&FG';
+    if (studies === 'UG' && quota === 'MQ') return 'UG+MQ';
+    if (studies === 'LATERAL' && quota === 'GQ' && !firstGraduation) return 'LATERAL+GQ';
+    if (studies === 'LATERAL' && quota === 'GQ' && firstGraduation) return 'LATERAL+GQ&FG';
+    if (studies === 'LATERAL' && quota === 'MQ') return 'LATERAL+MQ';
+    if (studies === 'PG_MBA' && quota === 'GQ') return 'PG_MBA+GQ';
+    if (studies === 'PG_MBA' && quota === 'MQ') return 'PG_MBA+MQ';
+    if (studies === 'PG_ME' && quota === 'GQ' && !diploma) return 'PG_ME+GQ!D';
+    if (studies === 'PG_ME' && quota === 'MQ' && !diploma) return 'PG_ME+MQ!D';
+    if (studies === 'PG_ME' && quota === 'GQ' && diploma) return 'PG_ME+GQ&D';
+    if (studies === 'PG_ME' && quota === 'MQ' && diploma) return 'PG_ME+MQ&D';
     return null;
   };
 
