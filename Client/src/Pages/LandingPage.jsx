@@ -6,15 +6,15 @@ import { Outlet } from 'react-router-dom';
 const LandingPage = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   return (
-    <div className="bg-[#E5E5E5] w-full h-screen">
+    <div className="w-full h-screen">
       
       <Header user={user}/>
 
       
-      <div className="flex w-full h-[calc(100vh-80px)]">
+      <div className="flex w-full h-auto">
         <Sidebar />
 
-        <div className="flex-1 h-full bg-white">
+        <div className="flex-1 h-auto bg-white border-l border-gray-300">
           <Outlet />
         </div>
       </div>

@@ -65,7 +65,7 @@ export const createStudent = async (req, res) => {
         return res.status(400).json({ message: "Missing or invalid required fields." });
     }
 
-    const { quota, admission_no, name, email, department, student_no, parent_no, files } = postData;
+    const { quota, admission_no, name, email, department, student_no, parent_no, files, studies } = postData;
 
 
     try {
@@ -97,8 +97,8 @@ export const createStudent = async (req, res) => {
 
         // Insert into student_info
         await pool.query(
-            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, quota, version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-            [name, admission_no, email, department, student_no, parent_no, quota, 0]
+            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, quota, studies,version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+            [name, admission_no, email, department, student_no, parent_no, quota, studies, 0]
         );
 
         // Insert documents (skip empty ones)
@@ -130,18 +130,33 @@ export const createStudent = async (req, res) => {
         console.error("Error inserting student records:", error); // Log full error object
         return res.status(500).json({ error: error.message || "Failed to create student records" });
 
-    }   
+    }
 };
 
 export const deleteAllData = async (req, res) => {
     try {
-        await pool.query("TRUNCATE TABLE 'student_info' CASCADE");
-        await pool.query("TRUNCATE TABLE 'record' CASCADE");
-        await pool.query("TRUNCATE TABLE 'versions' CASCADE");
-        await pool.query("TRUNCATE TABLE 'student' CASCADE");
+        await pool.query("TRUNCATE TABLE student_info CASCADE");
+        await pool.query("TRUNCATE TABLE record CASCADE");
+        await pool.query("TRUNCATE TABLE versions CASCADE");
+        await pool.query("TRUNCATE TABLE student CASCADE");
         res.status(200).json({ message: "All data deleted successfully" });
     } catch (error) {
         console.error("Error deleting data:", error);
         res.status(500).json({ error: "Failed to delete data" });
     }
-}   
+}
+
+
+export const getEditableStudent = async (req, res) => {
+    try {
+        const students = await pool.query("SELECT si.*, s.admission_no FROM student_info si JOIN student s ON si.student = s.admission_no WHERE s.lock = false; ")
+        if (students.rows.length === 0) {
+            return res.status(400).json({ message: "Document not found" });
+        }
+
+        res.status(200).json({ data: students.rows });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+}

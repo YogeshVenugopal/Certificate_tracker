@@ -10,7 +10,7 @@ const Sidebar = () => {
   const activeStyle = 'bg-blue-500 text-white hover:bg-blue-400 font-bold';
 
   return (
-    <div className="w-[15%] h-full flex items-start justify-center bg-white py-20 border-r border-gray-400">
+    <div className="w-[15%] h-full flex items-start justify-center bg-white py-20">
       <div className="flex flex-col space-y-10 w-[80%]">
         {/* New Entry - Uses 'end' to match exactly "/new-entry" */}
         <NavLink
