@@ -55,7 +55,7 @@ const Table = ({ type, studentData }) => {
                     <h3
                       className='text-blue-500 underline cursor-pointer underline-offset-2 hover:text-blue-700'
                       onClick={() => 
-                        type === "Edit" ? navigate(`${editUrl(student.id)}`) : console.log("Download")}
+                        type === "Edit" ? navigate(`${editUrl(student.admission_no)}`) : console.log("Download")}
                     >
                       {type}
                     </h3>

@@ -57,12 +57,13 @@ export const createStudent = async (req, res) => {
         typeof postData.email !== 'string' ||
         typeof postData.department !== 'string' ||
         typeof postData.student_no !== 'number' ||
+        typeof postData.parent_name !== 'string' ||
         typeof postData.parent_no !== 'number'
     ) {
         return res.status(400).json({ message: "Missing or invalid required fields." });
     }
 
-    const { quota, admission_no, name, email, department, student_no, parent_no, files, studies } = postData;
+    const { quota, admission_no, name, email, department, student_no, parent_name, parent_no, files, studies } = postData;
 
 
     try {
@@ -91,8 +92,8 @@ export const createStudent = async (req, res) => {
         );
 
         await pool.query(
-            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, quota, studies,version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-            [name, admission_no, email, department, student_no, parent_no, quota, studies, 0]
+            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, parent_name, quota, studies,version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+            [name, admission_no, email, department, student_no, parent_no, parent_name, quota, studies, 0]
         );
 
         if (Array.isArray(files)) {
@@ -157,7 +158,8 @@ export const getEditableStudent = async (req, res) => {
 
 export const getStudent = async (req, res) => {
     try {
-        const { admission_no } = req.params; 
+        const { admission_no } = req.params;
+        console.log(admission_no);
 
         if (!admission_no) {
             return res.status(400).json({ error: 'Admission number is required' });
@@ -170,12 +172,12 @@ export const getStudent = async (req, res) => {
             return res.status(400).json({ error: 'Student not found' });
         }
 
-        const student = studentResult.rows[0]; 
+        const student = studentResult.rows[0];
         const studentVersion = student.version_count;
 
 
         const studentInfoQuery = `
-            SELECT name, email, department, student_no, parent_no, quota, version, studies
+            SELECT name, email, department, student_no, parent_no, quota, version, studies, parent_name, version
             FROM student_info
             WHERE student = $1
         `;
@@ -187,7 +189,7 @@ export const getStudent = async (req, res) => {
 
         const studentInfo = studentInfoResult.rows[0];
 
-      
+
         const recordQuery = `
             SELECT name, original, photocopy, count
             FROM record
@@ -197,7 +199,7 @@ export const getStudent = async (req, res) => {
 
         const files = recordResult.rows;
 
-      
+
         res.json({
             admission_no: student.admission_no,
             ...studentInfo,
@@ -207,5 +209,94 @@ export const getStudent = async (req, res) => {
     } catch (error) {
         console.error('Error fetching student details:', error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+export const updateStudent = async (req, res) => {
+    const { admission_no } = req.params;
+    const { name, email, department, parent_name, quota, locked, studies, files } = req.body;
+    const version = parseInt(req.body.version, 10);
+    const parent_no = parseInt(req.body.parent_no, 10);
+    const student_no = parseInt(req.body.student_no, 10);
+
+    console.log(version, parent_no, student_no);
+    try {
+        await pool.query("BEGIN");
+
+        if (!admission_no) {
+            return res.status(400).json({ error: 'Admission number is required' });
+        }
+
+        // if (!name || !email || !department || !student_no || !parent_no || !parent_name || !quota || !version || !studies || !files ) {
+        //     return res.status(400).json({ error: 'All fields are required' });
+        // }
+        if (!name || !email || !department || !parent_name || !student_no || !parent_no || !quota || !files || !studies) {
+            return res.status(400).json({ error: 'Name and email are required' });
+        }
+
+
+        const studentRes = await pool.query(
+            "SELECT version_count, lock FROM student WHERE admission_no = $1",
+            [admission_no]
+        );
+        console.log("checking one");
+
+        if (studentRes.rows.length === 0) {
+            return res.status(400).json({ error: 'Student not found' });
+        }
+
+        let { lock } = studentRes.rows[0];
+        lock = locked !== undefined ? locked : lock;
+
+        // version_count += 1;
+        console.log("Locked value: ", lock);
+        await pool.query(
+            "UPDATE student SET version_count = version_count + 1, lock = $1 WHERE admission_no = $2",
+            [lock, admission_no]
+        );
+        console.log("checking two");
+
+
+        await pool.query(
+            `UPDATE student_info 
+             SET name = $1, email = $2, department = $3, student_no = $4, 
+                 parent_no = $5, parent_name = $6, quota = $7, studies = $8, version = version + 1 
+             WHERE student =  $9`,
+            [name, email, department, student_no, parent_no, parent_name, quota, studies, admission_no]
+        );
+        console.log("checking three");
+        for (const file of files) {
+            const { name, original, photocopy, count } = file;
+            const verResult = await pool.query(
+                `SELECT COALESCE(MAX(ver), 0) + 1 AS next_ver 
+                 FROM record 
+                 WHERE student = $1 AND name = $2`,
+                [admission_no, name]
+            );
+            const nextVer = verResult.rows[0].next_ver;
+            // console.log(verResult.rows[0].next_ver);
+            await pool.query(
+                `INSERT INTO record (name, original, photocopy, count, ver, student) 
+                VALUES ($1, $2, $3, $4, $5, $6)`,
+                [name, original, photocopy, count, nextVer, admission_no]
+            );
+        }
+
+        console.log("checking four");
+        await pool.query(
+            `UPDATE versions 
+             SET version_count = version_count + 1, doc_version = doc_version + 1 
+             WHERE student = $1`,
+            [admission_no]
+        );
+
+        console.log("checking five");
+        await pool.query("COMMIT");
+        console.log("checking six");
+        res.status(200).json({ message: "Student data updated successfully", lock });
+    } catch (error) {
+        await pool.query("ROLLBACK");
+        console.error("Error updating student data:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 }

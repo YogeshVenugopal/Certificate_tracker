@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 
-const DocumentTable = ({ studentData, editMode}) => {
-  const [fileData, setFileData] = useState(studentData.files);
+const DocumentTable = ({ studentData, editMode }) => {
+  // Initialize fileData with properly mapped data, adding id if not present
+  const [fileData, setFileData] = useState(
+    studentData.files.map((file, index) => ({
+      ...file,
+      id: file.id || index, // Use existing id or create one based on index
+      document: file.name // Map 'name' to 'document' property
+    }))
+  );
 
   const handleCheckboxChange = (e, fileId, field) => {
     const { checked } = e.target;  
@@ -12,7 +19,7 @@ const DocumentTable = ({ studentData, editMode}) => {
           if (field === 'photocopy' && checked) {
             return { ...file, [field]: checked, count: 1 };  
           } else if (field === 'photocopy' && !checked) {
-            return { ...file, [field]: checked, count: '' }; 
+            return { ...file, [field]: checked, count: 0 }; 
           } else {
             return { ...file, [field]: checked };
           }
@@ -21,7 +28,6 @@ const DocumentTable = ({ studentData, editMode}) => {
       })
     );
   };
-
 
   const handleCountChange = (e, fileId) => {
     let { value } = e.target;
@@ -34,7 +40,6 @@ const DocumentTable = ({ studentData, editMode}) => {
     );
   };
   
-
   return (
     <div className="flex items-center justify-center w-full">
       <table className="w-[90%]">
@@ -88,7 +93,7 @@ const DocumentTable = ({ studentData, editMode}) => {
                     id={`count-${file.id}`}
                     className="w-10 py-2"
                     value={file.count || 1}  // Default to 1 if count is empty or not set
-                    onChange={(e) => handleCountChange(e, file.id)}  // Correctly call handleCountChange here
+                    onChange={(e) => handleCountChange(e, file.id)}
                   />
                 ) : (
                   file.count || "-"
