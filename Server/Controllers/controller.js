@@ -239,7 +239,7 @@ export const updateStudent = async (req, res) => {
             "SELECT version_count, lock FROM student WHERE admission_no = $1",
             [admission_no]
         );
-        console.log("checking one");
+        // console.log("checking one");
 
         if (studentRes.rows.length === 0) {
             return res.status(400).json({ error: 'Student not found' });
@@ -254,7 +254,7 @@ export const updateStudent = async (req, res) => {
             "UPDATE student SET version_count = version_count + 1, lock = $1 WHERE admission_no = $2",
             [lock, admission_no]
         );
-        console.log("checking two");
+        // console.log("checking two");
 
 
         await pool.query(
@@ -264,7 +264,7 @@ export const updateStudent = async (req, res) => {
              WHERE student =  $9`,
             [name, email, department, student_no, parent_no, parent_name, quota, studies, admission_no]
         );
-        console.log("checking three");
+        // console.log("checking three");
         for (const file of files) {
             const { name, original, photocopy, count } = file;
             const verResult = await pool.query(
@@ -282,7 +282,7 @@ export const updateStudent = async (req, res) => {
             );
         }
 
-        console.log("checking four");
+        // console.log("checking four");
         await pool.query(
             `UPDATE versions 
              SET version_count = version_count + 1, doc_version = doc_version + 1 
