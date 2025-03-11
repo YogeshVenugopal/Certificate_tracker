@@ -227,9 +227,6 @@ export const updateStudent = async (req, res) => {
             return res.status(400).json({ error: 'Admission number is required' });
         }
 
-        // if (!name || !email || !department || !student_no || !parent_no || !parent_name || !quota || !version || !studies || !files ) {
-        //     return res.status(400).json({ error: 'All fields are required' });
-        // }
         if (!name || !email || !department || !parent_name || !student_no || !parent_no || !quota || !files || !studies) {
             return res.status(400).json({ error: 'Name and email are required' });
         }
@@ -239,7 +236,6 @@ export const updateStudent = async (req, res) => {
             "SELECT version_count, lock FROM student WHERE admission_no = $1",
             [admission_no]
         );
-        // console.log("checking one");
 
         if (studentRes.rows.length === 0) {
             return res.status(400).json({ error: 'Student not found' });
@@ -248,13 +244,12 @@ export const updateStudent = async (req, res) => {
         let { lock } = studentRes.rows[0];
         lock = locked !== undefined ? locked : lock;
 
-        // version_count += 1;
         console.log("Locked value: ", lock);
         await pool.query(
             "UPDATE student SET version_count = version_count + 1, lock = $1 WHERE admission_no = $2",
             [lock, admission_no]
         );
-        // console.log("checking two");
+    
 
 
         await pool.query(
@@ -264,7 +259,7 @@ export const updateStudent = async (req, res) => {
              WHERE student =  $9`,
             [name, email, department, student_no, parent_no, parent_name, quota, studies, admission_no]
         );
-        // console.log("checking three");
+        
         for (const file of files) {
             const { name, original, photocopy, count } = file;
             const verResult = await pool.query(
@@ -274,7 +269,7 @@ export const updateStudent = async (req, res) => {
                 [admission_no, name]
             );
             const nextVer = verResult.rows[0].next_ver;
-            // console.log(verResult.rows[0].next_ver);
+            
             await pool.query(
                 `INSERT INTO record (name, original, photocopy, count, ver, student) 
                 VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -282,7 +277,7 @@ export const updateStudent = async (req, res) => {
             );
         }
 
-        // console.log("checking four");
+        
         await pool.query(
             `UPDATE versions 
              SET version_count = version_count + 1, doc_version = doc_version + 1 
@@ -298,5 +293,19 @@ export const updateStudent = async (req, res) => {
         await pool.query("ROLLBACK");
         console.error("Error updating student data:", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+export const downloadStudent = async (req, res) => {
+    try {
+        const students = await pool.query("SELECT si.*, s.admission_no FROM student_info si JOIN student s ON si.student = s.admission_no WHERE s.lock = true; ")
+        if (students.rows.length === 0) {
+            return res.status(400).json({ message: "Document not found" });
+        }
+
+        res.status(200).json({ data: students.rows });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Internal server error" });
     }
 }

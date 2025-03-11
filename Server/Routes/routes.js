@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, getDocument, createStudent, deleteAllData, getEditableStudent, getStudent, updateStudent } from '../Controllers/controller.js';
+import { login, getDocument, createStudent, deleteAllData, getEditableStudent, getStudent, updateStudent, downloadStudent } from '../Controllers/controller.js';
 
 const router = express.Router();
 
@@ -10,4 +10,5 @@ router.delete('/delete-all', deleteAllData);
 router.get('/get-student', getEditableStudent);
 router.get('/getStudent/:admission_no', getStudent)
 router.put('/updateStudent/:admission_no', updateStudent);
+router.get('/get-document-download', downloadStudent);
 export default router;
