@@ -162,10 +162,18 @@ const EditFile = () => {
   const updateFileData = (index, field, value) => {
     if (formData.files && formData.files.length > 0) {
       const updatedFiles = [...formData.files];
-      updatedFiles[index] = {
-        ...updatedFiles[index],
-        [field]: value
-      };
+      
+      if (field === 'fileObject') {
+        // Replace the entire file object with the updated one
+        updatedFiles[index] = value;
+      } else {
+        // Update just a single field (for backward compatibility)
+        updatedFiles[index] = {
+          ...updatedFiles[index],
+          [field]: value
+        };
+      }
+      
       setFormData({
         ...formData,
         files: updatedFiles
@@ -429,7 +437,6 @@ const EditFile = () => {
             <DocumentTable
               studentData={formData}
               editMode={editMode}
-              type={"Edit"}
               updateFileData={updateFileData}
             />
           )}

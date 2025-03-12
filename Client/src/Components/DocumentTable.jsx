@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const DocumentTable = ({ studentData, editMode }) => {
+const DocumentTable = ({ studentData, editMode, updateFileData }) => {
   // Initialize fileData with properly mapped data, adding id if not present
   const [fileData, setFileData] = useState(
     studentData.files.map((file, index) => ({
@@ -10,36 +10,73 @@ const DocumentTable = ({ studentData, editMode }) => {
     }))
   );
 
-  const handleCheckboxChange = (e, fileId, field) => {
-    const { checked } = e.target;  
-    setFileData(prevFileData =>
-      prevFileData.map(file => {
-        if (file.id === fileId) {
-          
-          if (field === 'photocopy' && checked) {
-            return { ...file, [field]: checked, count: 1 };  
-          } else if (field === 'photocopy' && !checked) {
-            return { ...file, [field]: checked, count: 0 }; 
-          } else {
-            return { ...file, [field]: checked };
-          }
-        }
-        return file;
-      })
+  // Update local state when studentData changes
+  useEffect(() => {
+    setFileData(
+      studentData.files.map((file, index) => ({
+        ...file,
+        id: file.id || index,
+        document: file.name
+      }))
     );
+  }, [studentData]);
+
+  // In DocumentTable.jsx
+  const handleCheckboxChange = (e, fileId, field) => {
+    const { checked } = e.target;
+
+    // Find the index of the file in the array
+    const fileIndex = fileData.findIndex(file => file.id === fileId);
+    if (fileIndex === -1) return;
+
+    // Create updated file with new values
+    let updatedFile;
+    if (field === 'photocopy') {
+      updatedFile = {
+        ...fileData[fileIndex],
+        photocopy: checked,
+        count: checked ? 1 : 0
+      };
+    } else {
+      updatedFile = {
+        ...fileData[fileIndex],
+        [field]: checked
+      };
+    }
+
+    // Update local state with the new file data
+    setFileData(prevFileData =>
+      prevFileData.map(file => file.id === fileId ? updatedFile : file)
+    );
+
+    // Notify parent component with the exact same updated file data
+    if (updateFileData) {
+      // Instead of making separate calls, update the entire file object at once
+      updateFileData(fileIndex, 'fileObject', updatedFile);
+    }
   };
 
   const handleCountChange = (e, fileId) => {
     let { value } = e.target;
     value = Math.max(0, Number(value)); // Ensure count never goes below 0
-  
+
+    // Find the index of the file in the array
+    const fileIndex = fileData.findIndex(file => file.id === fileId);
+    if (fileIndex === -1) return;
+
+    // Update local state
     setFileData(prevFileData =>
       prevFileData.map(file =>
         file.id === fileId ? { ...file, count: value } : file
       )
     );
+
+    // Notify parent component
+    if (updateFileData) {
+      updateFileData(fileIndex, 'count', value);
+    }
   };
-  
+
   return (
     <div className="flex items-center justify-center w-full">
       <table className="w-[90%]">
@@ -64,7 +101,7 @@ const DocumentTable = ({ studentData, editMode }) => {
                     name="original"
                     id={`original-${file.id}`}
                     className="w-5 h-5"
-                    checked={file.original}
+                    checked={file.original || false}
                     onChange={(e) => handleCheckboxChange(e, file.id, 'original')}
                   />
                 ) : (
@@ -78,7 +115,7 @@ const DocumentTable = ({ studentData, editMode }) => {
                     name="photocopy"
                     id={`photocopy-${file.id}`}
                     className="w-5 h-5"
-                    checked={file.photocopy}
+                    checked={file.photocopy || false}
                     onChange={(e) => handleCheckboxChange(e, file.id, 'photocopy')}
                   />
                 ) : (
@@ -92,6 +129,7 @@ const DocumentTable = ({ studentData, editMode }) => {
                     name="count"
                     id={`count-${file.id}`}
                     className="w-10 py-2"
+                    min="0"
                     value={file.count || 1}  // Default to 1 if count is empty or not set
                     onChange={(e) => handleCountChange(e, file.id)}
                   />

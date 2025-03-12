@@ -111,6 +111,8 @@ const NewEntry = () => {
     setDocuments([]);
     setSelectedDocs([]);  
   }
+
+  console.log(selectedDocs)
   const handleSubmitStudent = async () => {
     const studentData = {
       username: user,
