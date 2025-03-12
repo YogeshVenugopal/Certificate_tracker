@@ -21,7 +21,7 @@ const App = () => {
           <Route path="edit-student" element={<EditStudent />} />
           <Route path="download-report" element={<DownloadReceipt />} />
           <Route path="final-summary" element={<FinalSummary />} />
-          <Route path="edit/:id" element={<EditFile />} />
+          <Route path="edit/:id/:version" element={<EditFile />} />
         </Route>
       </Routes>
     </Router>

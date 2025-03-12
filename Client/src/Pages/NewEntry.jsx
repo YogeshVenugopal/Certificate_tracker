@@ -21,7 +21,7 @@ const NewEntry = () => {
   const [showTable, setShowTable] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [selectedDocs, setSelectedDocs] = useState([]);
-
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchDocuments = async (document) => {
     if (!document) {
@@ -113,6 +113,7 @@ const NewEntry = () => {
   }
   const handleSubmitStudent = async () => {
     const studentData = {
+      username: user,
       name: studentName,
       admission_no: adminNo,
       parent_name: parentName,

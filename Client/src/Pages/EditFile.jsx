@@ -2,8 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DocumentTable from '../Components/DocumentTable';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 const EditFile = () => {
   const { id } = useParams();
+  const { version } = useParams();
+  const maxVersion = parseInt(version);
+  const [currentVersion, setCurrentVersion] = useState(parseInt(version) || 0);
+  // const navigate = useNavigate();
+  console.log(id, version);
+  
   const [formData, setFormData] = useState({
     admission_no: "",
     name: "",
@@ -18,12 +25,22 @@ const EditFile = () => {
     locked: false,
     files: []
   });
+  
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  
   const handleEdit = () => {
-    setEditMode(!editMode);
+    // Only allow edit if currentVersion equals maxVersion
+    if (currentVersion === maxVersion) {
+      setEditMode(!editMode);
+    } else {
+      setError('You can only edit the latest version of this document');
+      setTimeout(() => {
+        setError('');
+      }, 5000);
+    }
   };
 
   const handleChange = (e) => {
@@ -44,64 +61,84 @@ const EditFile = () => {
       if (response.ok) {
         setEditMode(false);
         setSuccess('Student data updated successfully');
+        
         setTimeout(() => {
           setSuccess('');
-        }, 5000)
+        }, 5000);
       } else {
         console.error("Failed to update student data");
         setError('Failed to save the student changes...!');
         setTimeout(() => {
           setError('');
-        }, 5000)
+        }, 5000);
       }
     } catch (error) {
       console.error("Update error:", error);
       setError('Failed to save the student changes...!', error);
       setTimeout(() => {
         setError('');
-      }, 5000)
+      }, 5000);
+    }
+  };
+
+  const handleVersionChange = (increment) => {
+    const newVersion = currentVersion + increment;
+    
+    // Ensure version is within bounds
+    if (newVersion >= 0 && newVersion <= maxVersion) {
+      setCurrentVersion(newVersion)
+      fetchStudentData(newVersion);
+      
+      // Disable edit mode if not on the latest version
+      if (newVersion !== maxVersion) {
+        setEditMode(false);
+      }
+    }
+
+
+  };
+
+  const fetchStudentData = async (versionToFetch) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/getStudent/${id}/${versionToFetch}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const resData = await response.json();
+        setFormData(resData);
+        setSuccess('Fetched student data successfully');
+        setTimeout(() => {
+          setSuccess('');
+        }, 5000);
+      } else {
+        console.log("Process failed");
+        setError('Failed to fetch student data');
+        setTimeout(() => {
+          setError('');
+        }, 5000);
+      }
+    } catch (error) {
+      console.log("Fetch error:", error);
+      setError('Error fetching student data: ' + error.message);
+      setTimeout(() => {
+        setError('');
+      }, 5000);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const getStudentDetails = async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/getStudent/${id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
-        if (response.ok) {
-          const resData = await response.json();
-          setFormData(resData); // Update state with fetched data
-          // console.log("Fetched student data:", resData);
-          setSuccess('Fetched student data successfully');
-          setTimeout(() => {
-            setSuccess('');
-          }, 5000)
-        } else {
-          console.log("Process failed");
-          // alert("Failed to fetch student data");
-          setError('Failed to fetch student data');
-          setTimeout(() => {
-            setError('');
-          }, 5000)
-        }
-      } catch (error) {
-        console.log("Fetch error:", error);
-        // alert("Error fetching student data: " + error.message);
-        setError('Error fetching student data: ' + error.message);
-        setTimeout(() => {
-          setError('');
-        }, 5000)
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getStudentDetails();
-  }, [id]);
+    // Then fetch the student data for the current version
+    const initialVersion = parseInt(version) || 0;
+    setCurrentVersion(initialVersion);
+    fetchStudentData(initialVersion);
+  }, [id, version]);
 
   // Handling file data updates
   const updateFileData = (index, field, value) => {
@@ -118,6 +155,7 @@ const EditFile = () => {
     }
   };
 
+  console.log(currentVersion, maxVersion)
   return (
     <div>
       {loading ? (
@@ -125,8 +163,6 @@ const EditFile = () => {
           <div className="w-12 h-12 border-t-2 border-b-2 border-gray-900 rounded-full animate-spin"></div>
         </div>
       ) : (
-
-
         <div className='font-semibold'>
           {error && (
             <motion.div
@@ -146,6 +182,18 @@ const EditFile = () => {
               {success}
             </motion.div>
           )}
+          
+          {/* Version warning message */}
+          {currentVersion < maxVersion && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="px-4 py-3 mb-4 font-bold text-yellow-700 bg-yellow-100 border-l-4 border-yellow-500 rounded"
+            >
+              You are viewing an older version. You can only edit when viewing the latest version.
+            </motion.div>
+          )}
+          
           <div className='flex flex-wrap items-center justify-center w-full h-auto gap-10 my-5 mt-5'>
             {/* Student Name */}
             <div>
@@ -368,35 +416,62 @@ const EditFile = () => {
             />
           )}
 
-          {/* Save/Edit Button */}
-          <div className="flex items-center justify-end mx-10 my-5">
-            {editMode ? (
-              <span className='flex justify-end w-full gap-4'>
-                <div className='flex items-center gap-4'>
-                  <p>Confirmed the changes</p>
-                  <input
-                    type="checkbox"
-                    name="locked"
-                    id="locked"
-                    checked={formData.locked || false}
-                    onChange={(e) => setFormData({ ...formData, locked: e.target.checked })}
-                  />
+          {/* Save/Edit Button and Version Control */}
+          <div className="flex items-center justify-between mx-10 my-5">
+            {/* Version Control buttons */}
+            {maxVersion > 0 && (
+              <div className="flex items-center">
+                <button
+                  className="px-3 py-2 font-bold text-white bg-gray-500 rounded-l-md disabled:opacity-50"
+                  onClick={() => handleVersionChange(-1)}
+                  disabled={currentVersion <= 0}
+                >
+                  &lt;
+                </button>
+                <div className="flex items-center justify-center px-4 py-2 font-bold text-gray-700 bg-gray-200 border-t border-b border-gray-300">
+                  Version: {currentVersion}
                 </div>
                 <button
-                  className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md"
-                  onClick={handleSave}
+                  className="px-3 py-2 font-bold text-white bg-gray-500 rounded-r-md disabled:opacity-50"
+                  onClick={() => handleVersionChange(1)}
+                  disabled={currentVersion >= maxVersion}
                 >
-                  Save
+                  &gt;
                 </button>
-              </span>
-            ) : (
-              <button
-                className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md"
-                onClick={handleEdit}
-              >
-                Edit
-              </button>
+              </div>
             )}
+            
+            {/* Save/Edit buttons */}
+            <div className="flex items-center">
+              {editMode ? (
+                <span className='flex justify-end gap-4'>
+                  <div className='flex items-center gap-4'>
+                    <p>Confirmed the changes</p>
+                    <input
+                      type="checkbox"
+                      name="locked"
+                      id="locked"
+                      checked={formData.locked || false}
+                      onChange={(e) => setFormData({ ...formData, locked: e.target.checked })}
+                    />
+                  </div>
+                  <button
+                    className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md"
+                    onClick={handleSave}
+                  >
+                    Save
+                  </button>
+                </span>
+              ) : (
+                <button
+                  className={`px-4 py-2 font-bold text-white rounded-md ${currentVersion === maxVersion ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
+                  onClick={handleEdit}
+                  disabled={currentVersion !== maxVersion}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
