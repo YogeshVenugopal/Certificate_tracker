@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import SearchBar from '../Components/SearchBar'
 import Table from '../Components/Table'
-import studentData from '../MockData/sampleData.json';
 import { motion } from 'framer-motion';
 
 const EditStudent = () => {

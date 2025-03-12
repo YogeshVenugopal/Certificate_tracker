@@ -29,14 +29,14 @@ const NewEntry = () => {
         setLoading(false);
         return;
     }
-    console.log(document);
+    // console.log(document);
     setLoading(true);
     try {
         const response = await fetch(`http://localhost:3000/getDocument/${document}`);
         if (!response.ok) throw new Error('Failed to fetch documents');
 
         const result = await response.json();
-        console.log('API Response:', result);
+        // console.log('API Response:', result);
 
         // Check if 'data' array exists and contains at least one object
         if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
@@ -136,7 +136,8 @@ const NewEntry = () => {
     }
     
   
-    console.log(studentData);
+    // console.log(studentData);
+
   
     try {
       const response = await fetch('http://localhost:3000/create-student', {
@@ -175,6 +176,7 @@ const NewEntry = () => {
       return;
     }
     const docCategory = determineDocCategory(studies, quota, firstGraduation, diploma);
+    // console.log(docCategory);
     if (docCategory) {
       fetchDocuments(docCategory);
       setShowTable(true);
@@ -330,10 +332,10 @@ const NewEntry = () => {
               <option value="UG">UG</option>
               <option value="PG_MBA">PG - MBA</option>
               <option value="PG_ME">PG - ME</option>
-              <option value="Lateral">Lateral</option>
+              <option value="LATERAL">LATERAL</option>
             </select>
           </div>
-          {quota === "GQ" && (studies === "UG" || studies === "Lateral") && (<div>
+          {quota === "GQ" && (studies === "UG" || studies === "LATERAL") && (<div>
             <label htmlFor="firstGraduation" className="block mb-1 font-bold text-gray-700">
               First Graduation:
             </label>

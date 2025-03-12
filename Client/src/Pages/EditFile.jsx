@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DocumentTable from '../Components/DocumentTable';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowForward } from "react-icons/io";
+
 const EditFile = () => {
   const { id } = useParams();
   const { version } = useParams();
   const maxVersion = parseInt(version);
   const [currentVersion, setCurrentVersion] = useState(parseInt(version) || 0);
-  // const navigate = useNavigate();
-  console.log(id, version);
-  
+  const navigate = useNavigate();
+  // console.log(id, version);
+  const storedUser = JSON.parse(localStorage.getItem('user')) || {}; // Ensure it's an object
+
+  console.log(storedUser); 
+
   const [formData, setFormData] = useState({
+    username: "",
     admission_no: "",
     name: "",
     email: "",
@@ -48,14 +54,19 @@ const EditFile = () => {
   };
 
   const handleSave = async () => {
-    console.log("Sending data", formData);
+    console.log("Sending data", formData.username);
+    
+    const dataToSend = {
+      ...formData,
+      username: storedUser
+    }
     try {
       const response = await fetch(`http://localhost:3000/updateStudent/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend)
       });
 
       if (response.ok) {
@@ -64,7 +75,10 @@ const EditFile = () => {
         
         setTimeout(() => {
           setSuccess('');
-        }, 5000);
+          navigate(-1);
+        }, 2000);
+        
+        
       } else {
         console.error("Failed to update student data");
         setError('Failed to save the student changes...!');
@@ -140,6 +154,10 @@ const EditFile = () => {
     fetchStudentData(initialVersion);
   }, [id, version]);
 
+
+  
+
+  
   // Handling file data updates
   const updateFileData = (index, field, value) => {
     if (formData.files && formData.files.length > 0) {
@@ -211,7 +229,7 @@ const EditFile = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
                   <p className='mx-2 text-gray-400'>{formData.name}</p>
                 </div>
               )}
@@ -233,7 +251,7 @@ const EditFile = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
                   <p className='mx-2 text-gray-400'>{formData.admission_no}</p>
                 </div>
               )}
@@ -255,7 +273,7 @@ const EditFile = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
                   <p className='mx-2 text-gray-400'>{formData.parent_name}</p>
                 </div>
               )}
@@ -277,7 +295,7 @@ const EditFile = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 overflow-hidden px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
                   <p className='mx-2 text-gray-400'>{formData.parent_no}</p>
                 </div>
               )}
@@ -299,7 +317,7 @@ const EditFile = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 overflow-hidden px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
                   <p className='mx-2 text-gray-400'>{formData.email}</p>
                 </div>
               )}
@@ -321,7 +339,7 @@ const EditFile = () => {
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 overflow-hidden py-2 rounded-md text-gray-400 outline-none mb-4'>
                   <p className='mx-2 text-gray-400'>{formData.student_no}</p>
                 </div>
               )}
@@ -350,7 +368,7 @@ const EditFile = () => {
                   <option value="Mech">Mech</option>
                 </select>
               ) : (
-                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4">
+                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 overflow-hidden py-2 rounded-md text-gray-400 outline-none mb-4">
                   <p className="mx-2 text-gray-400">{formData.department}</p>
                 </div>
               )}
@@ -373,7 +391,7 @@ const EditFile = () => {
                   <option value="GQ">Government Quota</option>
                 </select>
               ) : (
-                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4">
+                <div className="border-2 border-gray-100 w-[250px] overflow-hidden bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4">
                   <p className="mx-2 text-gray-400">
                     {formData.quota === "MQ" ? "Management Quota" : "Government Quota"}
                   </p>
@@ -399,7 +417,7 @@ const EditFile = () => {
                   <option value="MBA">MBA</option>
                 </select>
               ) : (
-                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4">
+                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none  overflow-hidden mb-4">
                   <p className="mx-2 text-gray-400">{formData.studies}</p>
                 </div>
               )}
@@ -422,21 +440,21 @@ const EditFile = () => {
             {maxVersion > 0 && (
               <div className="flex items-center">
                 <button
-                  className="px-3 py-2 font-bold text-white bg-gray-500 rounded-l-md disabled:opacity-50"
+                  className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-l-md disabled:opacity-50"
                   onClick={() => handleVersionChange(-1)}
                   disabled={currentVersion <= 0}
                 >
-                  &lt;
+                  <IoIosArrowBack />
                 </button>
-                <div className="flex items-center justify-center px-4 py-2 font-bold text-gray-700 bg-gray-200 border-t border-b border-gray-300">
+                <div className="flex items-center justify-center px-4 py-2 font-bold text-gray-700 bg-blue-200 border-t border-b border-blue-300">
                   Version: {currentVersion}
                 </div>
                 <button
-                  className="px-3 py-2 font-bold text-white bg-gray-500 rounded-r-md disabled:opacity-50"
+                  className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-r-md disabled:opacity-50"
                   onClick={() => handleVersionChange(1)}
                   disabled={currentVersion >= maxVersion}
                 >
-                  &gt;
+                  <IoIosArrowForward />
                 </button>
               </div>
             )}
