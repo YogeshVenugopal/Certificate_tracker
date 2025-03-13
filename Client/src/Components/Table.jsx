@@ -8,6 +8,7 @@ const Table = ({ type, studentData }) => {
   const [currentItems, setCurrentItems] = useState([]);
   const [pageCount, setPageCount] = useState(0);
   const [itemOffset, setItemOffset] = useState(0);
+  const [downloading, setDownloading] = useState(false);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -17,10 +18,53 @@ const Table = ({ type, studentData }) => {
       setPageCount(Math.ceil(studentData.data.length / itemsPerPage));
     }
   }, [itemOffset, studentData]);
- const editUrl = (student_id,version) => {
-   const currentUrl = window.location.pathname;
-   return currentUrl.replace('/edit-student', `/edit/${student_id}/${version}`);
- }
+
+  const editUrl = (student_id, version) => {
+    const currentUrl = window.location.pathname;
+    return currentUrl.replace('/edit-student', `/edit/${student_id}/${version}`);
+  };
+
+  const handleDownload = async (admissionNo, version) => {
+    setDownloading(true);
+    try {
+      // Using fetch with responseType 'blob' to handle binary data
+      const response = await fetch(`http://localhost:3000/downloadStudent/${admissionNo}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        // Get the blob directly since we know the backend is sending a file
+        const blob = await response.blob();
+
+        // Create a URL for the blob
+        const url = window.URL.createObjectURL(blob);
+
+        // Create a temporary anchor element to trigger the download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `student_${admissionNo}_summary.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        alert('Student data downloaded successfully!');
+      } else {
+        // Handle error response
+        const errorData = await response.json();
+        console.error('Failed to download student data:', errorData);
+        alert(errorData.error || 'Failed to download student data. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error downloading student data:', error);
+      alert('An error occurred while downloading the student data.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const handlePageClick = (event) => {
     const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
@@ -53,11 +97,14 @@ const Table = ({ type, studentData }) => {
                   <td>{student.version}</td>
                   <td>
                     <h3
-                      className='text-blue-500 underline cursor-pointer underline-offset-2 hover:text-blue-700'
-                      onClick={() => 
-                        type === "Edit" ? navigate(`${editUrl(student.admission_no, student.version)}`) : console.log("Download")}
+                      className={`underline cursor-pointer underline-offset-2 ${downloading ? 'text-gray-400' : 'text-blue-500 hover:text-blue-700'}`}
+                      onClick={() =>
+                        type === "Edit"
+                          ? navigate(`${editUrl(student.admission_no, student.version)}`)
+                          : handleDownload(student.admission_no, student.version)
+                      }
                     >
-                      {type}
+                      {downloading && type === "Download" ? "Downloading..." : type}
                     </h3>
                   </td>
                 </tr>
@@ -87,7 +134,6 @@ const Table = ({ type, studentData }) => {
       )}
     </>
   );
-  
 };
 
 export default Table;

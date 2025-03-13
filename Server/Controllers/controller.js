@@ -452,7 +452,6 @@ export const searchStudent = async (req, res) => {
 export const downloadStudentXL = async (req, res) => {
     try {
         const { admission_no } = req.params;
-
         if (!admission_no) {
             return res.status(400).json({ error: "Admission number is required" });
         }
@@ -460,12 +459,14 @@ export const downloadStudentXL = async (req, res) => {
         const studentQuery = `SELECT * FROM student_info WHERE student = $1`;
         const studentResult = await pool.query(studentQuery, [admission_no]);
 
+        let version = studentResult.rows.length > 0 ? studentResult.rows[0].version : null;
+
         if (studentResult.rows.length === 0) {
             return res.status(404).json({ error: "Student not found" });
         }
 
-        const recordQuery = `SELECT * FROM record WHERE student = $1`;
-        const recordResult = await pool.query(recordQuery, [admission_no]);
+        const recordQuery = `SELECT * FROM record WHERE student = $1 AND ver = $2`;
+        const recordResult = await pool.query(recordQuery, [admission_no, version]);
 
         const studentData = {
             studentInfo: studentResult.rows[0], // Single student data
@@ -485,7 +486,13 @@ export const downloadStudentXL = async (req, res) => {
         };
 
         // Student Details Section
-        summarySheet.cell("A1").value("Student Details").style({ bold: true, fontSize: 14 });
+        // Merge cells A1:E1 and set the value with centered text and styling
+        summarySheet.range("A1:E1").merged(true).value("Student Details").style({
+            bold: true,
+            fontSize: 14,
+            horizontalAlignment: "center",
+            verticalAlignment: "center"
+        });
 
         summarySheet.cell("A3").value("Name:");
         summarySheet.cell("B3").value(studentData.studentInfo.name).style({ bold: true });
@@ -545,12 +552,18 @@ export const downloadStudentXL = async (req, res) => {
         summarySheet.column("D").width(10);
         summarySheet.column("E").width(20);
 
-        // Save the workbook
-        const filePath = "student_summary.xlsx";
-        await workbook.toFileAsync(filePath);
-        console.log("Excel file generated successfully:", filePath);
+        // Generate a user-friendly filename
+        const filename = `student_${admission_no}_summary.xlsx`;
 
-        return res.status(200).json({ message: "Excel file generated successfully", filePath });
+        // Set response headers for file download
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+
+        // Instead of saving to disk, send directly to client
+        const buffer = await workbook.outputAsync();
+        return res.send(buffer);
+
+
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error: "Internal server error" });
