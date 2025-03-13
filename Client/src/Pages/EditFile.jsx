@@ -4,18 +4,14 @@ import DocumentTable from '../Components/DocumentTable';
 import { motion } from 'framer-motion';
 import { IoIosArrowBack } from "react-icons/io";
 import { IoIosArrowForward } from "react-icons/io";
-
+import { IoMdAdd } from "react-icons/io";
 const EditFile = () => {
   const { id } = useParams();
   const { version } = useParams();
   const maxVersion = parseInt(version);
   const [currentVersion, setCurrentVersion] = useState(parseInt(version) || 0);
   const navigate = useNavigate();
-  // console.log(id, version);
-  const storedUser = JSON.parse(localStorage.getItem('user')) || {}; // Ensure it's an object
-
-  console.log(storedUser); 
-
+  const storedUser = JSON.parse(localStorage.getItem('user')) || {};
   const [formData, setFormData] = useState({
     username: "",
     admission_no: "",
@@ -29,18 +25,20 @@ const EditFile = () => {
     version: 0,
     studies: "",
     locked: false,
-    files: []
+    files: [],
+    remark: ""
   });
-  
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+  const [isRemarkActive, setIsRemarkActive] = useState(false);
   const handleEdit = () => {
-    // Only allow edit if currentVersion equals maxVersion
     if (currentVersion === maxVersion) {
       setEditMode(!editMode);
+      if (editMode) {
+        setIsRemarkActive(false);
+      }
     } else {
       setError('You can only edit the latest version of this document');
       setTimeout(() => {
@@ -48,18 +46,17 @@ const EditFile = () => {
       }, 5000);
     }
   };
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
   const handleSave = async () => {
-    console.log("Sending data", formData.username);
-    
+
     const dataToSend = {
       ...formData,
       username: storedUser
     }
+    console.log("Sending data", dataToSend);
+
     try {
       const response = await fetch(`http://localhost:3000/updateStudent/${id}`, {
         method: 'PUT',
@@ -68,17 +65,15 @@ const EditFile = () => {
         },
         body: JSON.stringify(dataToSend)
       });
-
       if (response.ok) {
         setEditMode(false);
         setSuccess('Student data updated successfully');
-        
+        setIsRemarkActive(false);
+
         setTimeout(() => {
           setSuccess('');
           navigate(-1);
         }, 2000);
-        
-        
       } else {
         console.error("Failed to update student data");
         setError('Failed to save the student changes...!');
@@ -94,24 +89,16 @@ const EditFile = () => {
       }, 5000);
     }
   };
-
   const handleVersionChange = (increment) => {
     const newVersion = currentVersion + increment;
-    
-    // Ensure version is within bounds
     if (newVersion >= 0 && newVersion <= maxVersion) {
       setCurrentVersion(newVersion)
       fetchStudentData(newVersion);
-      
-      // Disable edit mode if not on the latest version
       if (newVersion !== maxVersion) {
         setEditMode(false);
       }
     }
-
-
   };
-
   const fetchStudentData = async (versionToFetch) => {
     setLoading(true);
     try {
@@ -121,7 +108,6 @@ const EditFile = () => {
           'Content-Type': 'application/json',
         }
       });
-      
       if (response.ok) {
         const resData = await response.json();
         setFormData(resData);
@@ -146,41 +132,32 @@ const EditFile = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    // Then fetch the student data for the current version
     const initialVersion = parseInt(version) || 0;
     setCurrentVersion(initialVersion);
     fetchStudentData(initialVersion);
   }, [id, version]);
-
-
-  
-
-  
-  // Handling file data updates
   const updateFileData = (index, field, value) => {
     if (formData.files && formData.files.length > 0) {
       const updatedFiles = [...formData.files];
-      
+
       if (field === 'fileObject') {
-        // Replace the entire file object with the updated one
         updatedFiles[index] = value;
       } else {
-        // Update just a single field (for backward compatibility)
         updatedFiles[index] = {
           ...updatedFiles[index],
           [field]: value
         };
       }
-      
       setFormData({
         ...formData,
         files: updatedFiles
       });
     }
   };
-
+  const handleRemarkClick = () => {
+    setIsRemarkActive(true);
+  };
   console.log(currentVersion, maxVersion)
   return (
     <div>
@@ -208,8 +185,6 @@ const EditFile = () => {
               {success}
             </motion.div>
           )}
-          
-          {/* Version warning message */}
           {currentVersion < maxVersion && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -219,9 +194,8 @@ const EditFile = () => {
               You are viewing an older version. You can only edit when viewing the latest version.
             </motion.div>
           )}
-          
+
           <div className='flex flex-wrap items-center justify-center w-full h-auto gap-10 my-5 mt-5'>
-            {/* Student Name */}
             <div>
               <label htmlFor="studentName" className="block mb-1 font-bold text-gray-700">
                 Student Name:
@@ -242,8 +216,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Admission Number */}
             <div>
               <label htmlFor="admissionNo" className="block mb-1 font-bold text-gray-700">
                 Admission No:
@@ -264,8 +236,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Parent Name */}
             <div>
               <label htmlFor="parentName" className="block mb-1 font-bold text-gray-700">
                 Parent Name:
@@ -286,8 +256,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Parent No */}
             <div>
               <label htmlFor="parentNo" className="block mb-1 font-bold text-gray-700">
                 Parent No:
@@ -308,8 +276,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block mb-1 font-bold text-gray-700">
                 Personal Email:
@@ -330,8 +296,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Student No */}
             <div>
               <label htmlFor="studentNo" className="block mb-1 font-bold text-gray-700">
                 Student No:
@@ -352,8 +316,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Department */}
             <div>
               <label htmlFor="dept" className="block mb-1 font-bold text-gray-700">
                 Department:
@@ -381,8 +343,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Quota */}
             <div>
               <label htmlFor="quota" className="block mb-1 font-bold text-gray-700">
                 Quota:
@@ -406,8 +366,6 @@ const EditFile = () => {
                 </div>
               )}
             </div>
-
-            {/* Studies */}
             <div>
               <label htmlFor="studies" className="block mb-1 font-bold text-gray-700">
                 Studies:
@@ -431,8 +389,6 @@ const EditFile = () => {
               )}
             </div>
           </div>
-
-          {/* Files Table */}
           {formData.files && formData.files.length > 0 && (
             <DocumentTable
               studentData={formData}
@@ -440,10 +396,48 @@ const EditFile = () => {
               updateFileData={updateFileData}
             />
           )}
+          {/* Edit mode remarks section */}
+          {editMode && (
+            <div className="mx-10 my-6">
+              {!formData.remark && !isRemarkActive ? (
+                <div
+                  onClick={handleRemarkClick}
+                  className="flex flex-col items-center justify-center w-full p-6 text-gray-500 border-2 border-gray-400 border-dashed rounded-md cursor-pointer hover:bg-gray-50"
+                >
+                  <div className="flex flex-col items-center justify-center">
+                    <IoMdAdd className="w-10 h-10 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-500">Add a remark</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full">
+                  <label htmlFor="remark" className="block mb-2 font-bold text-gray-700">
+                    Remark:
+                  </label>
+                  <textarea
+                    className="w-full px-4 py-3 text-gray-600 border-2 border-gray-400 rounded-md bg-gray-50 focus:outline-none focus:border-blue-500"
+                    name="remark"
+                    id="remark"
+                    rows={4}
+                    placeholder="Enter your remarks about this student..."
+                    value={formData.remark || ""}
+                    onChange={handleChange}
+                  ></textarea>
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Save/Edit Button and Version Control */}
+          {/* Non-edit mode remarks section */}
+          {!editMode && formData.remark && (
+            <div className="mx-10 my-6">
+              <div className="p-4 bg-gray-100 border border-gray-300 rounded-md">
+                <h3 className="mb-2 text-lg font-bold text-gray-700">Remark:</h3>
+                <p className="text-gray-600">{formData.remark}</p>
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between mx-10 my-5">
-            {/* Version Control buttons */}
             {maxVersion > 0 && (
               <div className="flex items-center">
                 <button
@@ -465,8 +459,6 @@ const EditFile = () => {
                 </button>
               </div>
             )}
-            
-            {/* Save/Edit buttons */}
             <div className="flex items-center">
               {editMode ? (
                 <span className='flex justify-end gap-4'>
@@ -503,5 +495,4 @@ const EditFile = () => {
     </div>
   );
 };
-
 export default EditFile;
