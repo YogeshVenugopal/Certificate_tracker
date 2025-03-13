@@ -4,37 +4,80 @@ import Table from '../Components/Table'
 import { motion } from 'framer-motion';
 
 const EditStudent = () => {
-
   const [student, setStudent] = useState([]);
   const [error, setError] = useState(null);
-  useEffect(() => {
-    const fetchStudentData = async () => {
-      try {
-        const responseData = await fetch('http://localhost:3000/get-student', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
+  const [loading, setLoading] = useState(false);
 
-        if (responseData.ok) {
-          const data = await responseData.json();
-          console.log(data);
-          setStudent(data);
+  useEffect(() => {
+    fetchAllStudents();
+  }, []);
+
+  const fetchAllStudents = async () => {
+    setLoading(true);
+    try {
+      const responseData = await fetch('http://localhost:3000/get-student', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         }
-        else{
-          setError('Failed to fetch student data');
-          setInterval(() => {
-            setError(null);
-          }, 3000);
-        }
-      } catch (error) {
-        console.log(error);
+      });
+
+      if (responseData.ok) {
+        const data = await responseData.json();
+        console.log(data);
+        setStudent(data);
       }
+      else {
+        showError('Failed to fetch student data');
+      }
+    } catch (error) {
+      console.log(error);
+      showError('An error occurred while fetching data');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleSearch = async (admissionNumber) => {
+    if (!admissionNumber.trim()) {
+      fetchAllStudents();
+      return;
     }
 
-    fetchStudentData();
-  },[])
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/search-student/${admissionNumber}/lock`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.length === 0) {
+          showError('No student found with that admission number');
+        } else {
+          setStudent(data); 
+        }
+      } else {
+        showError('Failed to search for student');
+      }
+    } catch (error) {
+      console.log(error);
+      showError('An error occurred while searching');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const showError = (message) => {
+    setError(message);
+    setInterval(() => {
+      setError(null);
+    }, 3000);
+  }
 
   return (
     <div className='py-5'>
@@ -47,10 +90,16 @@ const EditStudent = () => {
           {error}
         </motion.div>
       )}
-      <SearchBar />
-      <div className='mt-10 w-[90%] h-auto p-5 rounded-md mx-auto shadow-[rgba(50,50,93,0.25)_0px_2px_12px_-2px,_rgba(0,0,0,0.3)_0px_0px_7px_-3px]'>        {/* Don't forget to change the height value */}
+      <SearchBar onSearch={handleSearch} />
+      <div className='mt-10 w-[90%] h-auto p-5 rounded-md mx-auto shadow-[rgba(50,50,93,0.25)_0px_2px_12px_-2px,_rgba(0,0,0,0.3)_0px_0px_7px_-3px]'>
         <h1 className='mb-10 text-4xl font-bold text-gray-500'>Students List</h1>
-        <Table type='Edit' studentData={student} />
+        {loading ? (
+          <div className="flex items-center justify-center py-10">
+            <p className="text-lg text-gray-600">Loading...</p>
+          </div>
+        ) : (
+          <Table type='Edit' studentData={student} />
+        )}
       </div>
     </div>
   )

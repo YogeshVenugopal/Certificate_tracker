@@ -388,3 +388,62 @@ export const downloadStudent = async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 }
+
+export const searchStudent = async (req, res) => {
+    try {
+        const { admission_no, locked } = req.params; 
+
+        // Validate required fields
+        if (!admission_no) {
+            return res.status(400).json({ error: 'Admission number is required' });
+        }
+
+        // Validate locked parameter
+        let lock = null;
+        if (locked === 'lock') {
+            lock = true;
+        } else if (locked === 'unlock') {
+            lock = false;
+        } else {
+            return res.status(400).json({ error: 'Invalid lock status. Use "lock" or "unlock".' });
+        }
+
+        // Query the student table for basic info
+        const studentQuery = `
+            SELECT admission_no, version_count 
+            FROM student 
+            WHERE admission_no = $1 AND lock = $2
+        `;
+        const studentResult = await pool.query(studentQuery, [admission_no, lock]);
+
+        if (studentResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+
+        const student = studentResult.rows[0];
+        const latestVersion = student.version_count;
+
+        // Query the student_info table for detailed information
+        const studentInfoQuery = `
+            SELECT name, email, department, student_no, parent_no, parent_name, studies, quota
+            FROM student_info
+            WHERE student = $1 
+            ORDER BY version DESC 
+            LIMIT 1
+        `;
+        const studentInfoResult = await pool.query(studentInfoQuery, [admission_no]);
+
+        // Combine and return the results
+        res.json({
+            data:[{
+                admission_no: student.admission_no,
+                version: student.version_count,
+                ...(studentInfoResult.rows.length > 0 ? studentInfoResult.rows[0] : { message: 'No student info found' })
+            }]
+        });
+
+    } catch (error) {
+        console.error('Error searching for student:', error.message, error.stack);
+        res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+};
