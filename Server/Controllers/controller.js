@@ -1,4 +1,5 @@
 import pool from "../Config/db.js";
+import XlsxPopulate from "xlsx-populate";
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -343,7 +344,7 @@ export const updateStudent = async (req, res) => {
                 );
             }
         }
-        
+
         // Update versions table
         const versionResult = await pool.query(
             `UPDATE versions 
@@ -391,7 +392,7 @@ export const downloadStudent = async (req, res) => {
 
 export const searchStudent = async (req, res) => {
     try {
-        const { admission_no, locked } = req.params; 
+        const { admission_no, locked } = req.params;
 
         // Validate required fields
         if (!admission_no) {
@@ -435,7 +436,7 @@ export const searchStudent = async (req, res) => {
 
         // Combine and return the results
         res.json({
-            data:[{
+            data: [{
                 admission_no: student.admission_no,
                 version: student.version_count,
                 ...(studentInfoResult.rows.length > 0 ? studentInfoResult.rows[0] : { message: 'No student info found' })
@@ -445,5 +446,113 @@ export const searchStudent = async (req, res) => {
     } catch (error) {
         console.error('Error searching for student:', error.message, error.stack);
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
+    }
+};
+
+export const downloadStudentXL = async (req, res) => {
+    try {
+        const { admission_no } = req.params;
+
+        if (!admission_no) {
+            return res.status(400).json({ error: "Admission number is required" });
+        }
+
+        const studentQuery = `SELECT * FROM student_info WHERE student = $1`;
+        const studentResult = await pool.query(studentQuery, [admission_no]);
+
+        if (studentResult.rows.length === 0) {
+            return res.status(404).json({ error: "Student not found" });
+        }
+
+        const recordQuery = `SELECT * FROM record WHERE student = $1`;
+        const recordResult = await pool.query(recordQuery, [admission_no]);
+
+        const studentData = {
+            studentInfo: studentResult.rows[0], // Single student data
+            records: recordResult.rows, // List of records
+        };
+
+        const workbook = await XlsxPopulate.fromBlankAsync();
+        const summarySheet = workbook.sheet(0);
+        summarySheet.name("Summary");
+
+        // Header Styling
+        const headerStyle = {
+            bold: true,
+            fill: { type: "solid", color: "D3D3D3" },
+            border: { top: "thin", bottom: "thin", left: "thin", right: "thin" },
+            horizontalAlignment: "center",
+        };
+
+        // Student Details Section
+        summarySheet.cell("A1").value("Student Details").style({ bold: true, fontSize: 14 });
+
+        summarySheet.cell("A3").value("Name:");
+        summarySheet.cell("B3").value(studentData.studentInfo.name).style({ bold: true });
+
+        summarySheet.cell("A4").value("Admission Number:");
+        summarySheet.cell("B4").value(studentData.studentInfo.student).style({ bold: true });
+
+        summarySheet.cell("A5").value("Email:");
+        summarySheet.cell("B5").value(studentData.studentInfo.email);
+
+        summarySheet.cell("A6").value("Department:");
+        summarySheet.cell("B6").value(studentData.studentInfo.department);
+
+        summarySheet.cell("A7").value("Phone:");
+        summarySheet.cell("B7").value(studentData.studentInfo.student_no);
+
+        summarySheet.cell("A8").value("Parent Name:");
+        summarySheet.cell("B8").value(studentData.studentInfo.parent_name);
+
+        summarySheet.cell("A9").value("Parent Phone:");
+        summarySheet.cell("B9").value(studentData.studentInfo.parent_no);
+
+        summarySheet.cell("A10").value("Quota:");
+        summarySheet.cell("B10").value(studentData.studentInfo.quota);
+
+        // Document Status Header
+        summarySheet.cell("A12").value("Document Status").style({ bold: true, underline: true });
+
+        // Table Headers for Documents
+        const headers = ["Document Name", "Original", "Photocopy", "Count", "Submitted By"];
+        headers.forEach((header, index) => {
+            const cell = summarySheet.cell(14, index + 1);
+            cell.value(header).style(headerStyle);
+        });
+
+        // Add document status data
+        studentData.records.forEach((record, index) => {
+            const row = index + 15;
+            summarySheet.cell(row, 1).value(record.name);
+            summarySheet.cell(row, 2).value(record.original ? "Yes" : "No");
+            summarySheet.cell(row, 3).value(record.photocopy ? "Yes" : "No");
+            summarySheet.cell(row, 4).value(record.count);
+            summarySheet.cell(row, 5).value(record.username);
+
+            // Apply border to all cells in the row
+            for (let col = 1; col <= headers.length; col++) {
+                summarySheet.cell(row, col).style({
+                    border: { top: "thin", bottom: "thin", left: "thin", right: "thin" },
+                });
+            }
+        });
+
+        // Set column widths
+        summarySheet.column("A").width(40);
+        summarySheet.column("B").width(15);
+        summarySheet.column("C").width(15);
+        summarySheet.column("D").width(10);
+        summarySheet.column("E").width(20);
+
+        // Save the workbook
+        const filePath = "student_summary.xlsx";
+        await workbook.toFileAsync(filePath);
+        console.log("Excel file generated successfully:", filePath);
+
+        return res.status(200).json({ message: "Excel file generated successfully", filePath });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: "Internal server error" });
     }
 };
