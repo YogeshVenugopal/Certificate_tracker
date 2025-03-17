@@ -13,6 +13,8 @@ export const emailVerification = function(email) {
     return re.test(email);
   }
 
-export const API_CALL = function() {
-  return "http://localhost:5000";
-}
+// export const API_CALL = function() {
+//   return "http://localhost:5000";
+// }
+
+export const API_CALL = "http://localhost:5000";
