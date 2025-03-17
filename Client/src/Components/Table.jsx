@@ -7,6 +7,8 @@ const Table = ({ type, studentData }) => {
   const navigate = useNavigate();
   const [currentItems, setCurrentItems] = useState([]);
   const [pageCount, setPageCount] = useState(0);
+  const [sucess, setSucess] = useState('');
+  const [error, setError] = useState('');
   const [itemOffset, setItemOffset] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const itemsPerPage = 8;
@@ -50,18 +52,31 @@ const Table = ({ type, studentData }) => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        alert('Student data downloaded successfully!');
+        setSucess('Student data downloaded successfully!');
+        setTimeout(() => {
+          setSucess('');
+        },3000);
       } else {
         // Handle error response
         const errorData = await response.json();
         console.error('Failed to download student data:', errorData);
-        alert(errorData.error || 'Failed to download student data. Please try again.');
+        // alert(errorData.error || 'Failed to download student data. Please try again.');
+        setError('Failed to download student data. Please try again.');
+        setTimeout(() => {
+          setError('');
+        },3000);
       }
     } catch (error) {
       console.error('Error downloading student data:', error);
-      alert('An error occurred while downloading the student data.');
+      // alert('An error occurred while downloading the student data.');
+      setError('An error occurred while downloading the student data.');
+      setTimeout(() => {
+        setError('');
+      },3000);
     } finally {
       setDownloading(false);
+      setError('');
+      setSucess('');
     }
   };
 
@@ -74,6 +89,24 @@ const Table = ({ type, studentData }) => {
     <>
       {currentItems.length > 0 ? (
         <>
+          {error && (
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-l-2 border-red-500 rounded top-2 right-5"
+        >
+          {error}
+        </motion.div>
+      )}
+      {sucess && (
+        <motion.div
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="absolute px-3 py-3 font-bold text-green-500 bg-white border-l-2 border-green-500 rounded top-2 right-5"
+        >
+          {sucess}
+        </motion.div>
+      )}
           <table className='w-full rounded-sm'>
             <thead className='w-full font-semibold text-white bg-gray-700'>
               <tr className='text-lg h-[50px] rounded'>

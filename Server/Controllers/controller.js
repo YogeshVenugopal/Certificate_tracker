@@ -473,99 +473,89 @@ export const downloadStudentXL = async (req, res) => {
             records: recordResult.rows, // List of records
         };
 
-        const workbook = await XlsxPopulate.fromBlankAsync();
-        const summarySheet = workbook.sheet(0);
-        summarySheet.name("Summary");
+        // console.log("check one");
+        // Path to your template file - adjust this path to match your directory structure
+        const templatePath = '../Server/files/template.xlsx';
+        
 
-        // Header Styling
-        const headerStyle = {
-            bold: true,
-            fill: { type: "solid", color: "D3D3D3" },
-            border: { top: "thin", bottom: "thin", left: "thin", right: "thin" },
-            horizontalAlignment: "center",
-        };
+        // console.log("check two");
+        // Load the template file
+        const workbook = await XlsxPopulate.fromFileAsync(templatePath);
+        const summarySheet = workbook.sheet("Sheet1");
 
-        // Student Details Section
-        // Merge cells A1:E1 and set the value with centered text and styling
-        summarySheet.range("A1:E1").merged(true).value("Student Details").style({
-            bold: true,
-            fontSize: 14,
-            horizontalAlignment: "center",
-            verticalAlignment: "center"
-        });
+        // console.log(summarySheet)
+        // console.log("Available sheets:", workbook.sheets().map(sheet => sheet.name()));
+        
+        if (!summarySheet) {
+            throw new Error("Could not find the first sheet in the template");
+        }
+        
 
-        summarySheet.cell("A3").value("Name:");
-        summarySheet.cell("B3").value(studentData.studentInfo.name).style({ bold: true });
+        // Fill student details from the template
+        // console.log("check three");
+        summarySheet.cell("C5").value(studentData.studentInfo.name);
+        summarySheet.cell("C6").value(studentData.studentInfo.student);
+        summarySheet.cell("C7").value(studentData.studentInfo.email);
+        summarySheet.cell("C8").value(studentData.studentInfo.department);
+        summarySheet.cell("C9").value(studentData.studentInfo.student_no);
+        summarySheet.cell("C10").value(studentData.studentInfo.parent_name);
+        summarySheet.cell("C11").value(studentData.studentInfo.parent_no);
+        summarySheet.cell("C12").value(studentData.studentInfo.quota);
+        summarySheet.cell("C13").value(studentData.studentInfo.studies);
 
-        summarySheet.cell("A4").value("Admission Number:");
-        summarySheet.cell("B4").value(studentData.studentInfo.student).style({ bold: true });
-
-        summarySheet.cell("A5").value("Email:");
-        summarySheet.cell("B5").value(studentData.studentInfo.email);
-
-        summarySheet.cell("A6").value("Department:");
-        summarySheet.cell("B6").value(studentData.studentInfo.department);
-
-        summarySheet.cell("A7").value("Phone:");
-        summarySheet.cell("B7").value(studentData.studentInfo.student_no);
-
-        summarySheet.cell("A8").value("Parent Name:");
-        summarySheet.cell("B8").value(studentData.studentInfo.parent_name);
-
-        summarySheet.cell("A9").value("Parent Phone:");
-        summarySheet.cell("B9").value(studentData.studentInfo.parent_no);
-
-        summarySheet.cell("A10").value("Quota:");
-        summarySheet.cell("B10").value(studentData.studentInfo.quota);
-
-        // Document Status Header
-        summarySheet.cell("A12").value("Document Status").style({ bold: true, underline: true });
-
-        // Table Headers for Documents
-        const headers = ["Document Name", "Original", "Photocopy", "Count", "Submitted By"];
-        headers.forEach((header, index) => {
-            const cell = summarySheet.cell(14, index + 1);
-            cell.value(header).style(headerStyle);
-        });
-
+        // Start row for document records (adjust based on your template)
+        const startRow = 15;
+        
+        // console.log("check four");
         // Add document status data
         studentData.records.forEach((record, index) => {
-            const row = index + 15;
+            const row = index + startRow;
             summarySheet.cell(row, 1).value(record.name);
             summarySheet.cell(row, 2).value(record.original ? "Yes" : "No");
             summarySheet.cell(row, 3).value(record.photocopy ? "Yes" : "No");
             summarySheet.cell(row, 4).value(record.count);
             summarySheet.cell(row, 5).value(record.username);
-
-            // Apply border to all cells in the row
-            for (let col = 1; col <= headers.length; col++) {
-                summarySheet.cell(row, col).style({
-                    border: { top: "thin", bottom: "thin", left: "thin", right: "thin" },
-                });
-            }
         });
 
-        // Set column widths
-        summarySheet.column("A").width(40);
-        summarySheet.column("B").width(15);
-        summarySheet.column("C").width(15);
-        summarySheet.column("D").width(10);
-        summarySheet.column("E").width(20);
 
+        // console.log("check five");
         // Generate a user-friendly filename
         const filename = `student_${admission_no}_summary.xlsx`;
 
+        // console.log("check six");
         // Set response headers for file download
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
 
-        // Instead of saving to disk, send directly to client
+
+        // console.log("check seven");
+        // Send the workbook directly to the response
         const buffer = await workbook.outputAsync();
         return res.send(buffer);
 
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
 
+export const fetchStudentData = async (req, res) => {
+
+    try {
+        const { remark, category } = req.body;
+
+        if(!remark || !category) {
+            return res.status(400).json({ error: "Missing required fields" });
+        }
+
+        const studentQuery = `
+        SELECT admission_no, version_count FROM student WHERE lock = true
+        `
+
+        const studentResult = await pool.query(studentQuery);
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error: "Internal server error" });
     }
+    
 };
