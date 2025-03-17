@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KiteImg from '../assets/kgkite.png';
 import MessageBox from '../Components/MessageBox';
+import { API_CALL } from '../Utils/utils';
+
 
 const Login = () => {
     const [username, setUsername] = useState('');
@@ -26,7 +28,7 @@ const Login = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/login', {
+            const response = await fetch(`${API_CALL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),

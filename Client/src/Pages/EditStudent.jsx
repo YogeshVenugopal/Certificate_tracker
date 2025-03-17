@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import SearchBar from '../Components/SearchBar'
 import Table from '../Components/Table'
 import { motion } from 'framer-motion';
+import { API_CALL } from '../Utils/utils';
 
 const EditStudent = () => {
   const [student, setStudent] = useState([]);
@@ -15,7 +16,7 @@ const EditStudent = () => {
   const fetchAllStudents = async () => {
     setLoading(true);
     try {
-      const responseData = await fetch('http://localhost:3000/get-student', {
+      const responseData = await fetch(`${API_CALL}/get-student`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +47,7 @@ const EditStudent = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/search-student/${admissionNumber}/lock`, {
+      const response = await fetch(`${API_CALL}/search-student/${admissionNumber}/lock`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

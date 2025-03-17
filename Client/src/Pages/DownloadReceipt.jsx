@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import SearchBar from '../Components/SearchBar';
 import Table from '../Components/Table';
 import { motion } from 'framer-motion';
+import { API_CALL } from '../Utils/utils';
+
 
 const DownloadReceipt = () => {
   const [studentData, setStudentData] = useState([]);
@@ -16,7 +18,7 @@ const DownloadReceipt = () => {
   const fetchDocumentData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/get-document-download', {
+      const response = await fetch(`${API_CALL}/get-document-download`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +48,7 @@ const DownloadReceipt = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/search-student/${admissionNumber}/lock`, {
+      const response = await fetch(`${API_CALL}/search-student/${admissionNumber}/lock`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

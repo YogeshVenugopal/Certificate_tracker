@@ -3,6 +3,7 @@ import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
 import sampleImg from '../assets/sample-removebg-preview.png';
 import GetDocument from '../Components/GetDocument';
+import { API_CALL } from '../Utils/utils';
 const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
   const [adminNo, setAdminNo] = useState('');
@@ -32,7 +33,7 @@ const NewEntry = () => {
     // console.log(document);
     setLoading(true);
     try {
-        const response = await fetch(`http://localhost:3000/getDocument/${document}`);
+        const response = await fetch(`${API_CALL}/getDocument/${document}`);
         if (!response.ok) throw new Error('Failed to fetch documents');
 
         const result = await response.json();
@@ -142,7 +143,7 @@ const NewEntry = () => {
 
   
     try {
-      const response = await fetch('http://localhost:3000/create-student', {
+      const response = await fetch(`${API_CALL}/create-student`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

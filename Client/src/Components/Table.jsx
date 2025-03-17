@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactPagination from 'react-paginate';
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-
+import { API_CALL } from '../Utils/utils';
 const Table = ({ type, studentData }) => {
   const navigate = useNavigate();
   const [currentItems, setCurrentItems] = useState([]);
@@ -30,7 +30,7 @@ const Table = ({ type, studentData }) => {
     setDownloading(true);
     try {
       // Using fetch with responseType 'blob' to handle binary data
-      const response = await fetch(`http://localhost:3000/downloadStudent/${admissionNo}`, {
+      const response = await fetch(`${API_CALL}/downloadStudent/${admissionNo}`, {
         method: 'GET',
       });
 

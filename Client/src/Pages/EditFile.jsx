@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { IoIosArrowBack } from "react-icons/io";
 import { IoIosArrowForward } from "react-icons/io";
 import { IoMdAdd } from "react-icons/io";
+import { API_CALL } from '../Utils/utils';
+
 const EditFile = () => {
   const { id } = useParams();
   const { version } = useParams();
@@ -58,7 +60,7 @@ const EditFile = () => {
     console.log("Sending data", dataToSend);
 
     try {
-      const response = await fetch(`http://localhost:3000/updateStudent/${id}`, {
+      const response = await fetch(`${API_CALL}/updateStudent/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +104,7 @@ const EditFile = () => {
   const fetchStudentData = async (versionToFetch) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/getStudent/${id}/${versionToFetch}`, {
+      const response = await fetch(`${API_CALL}/getStudent/${id}/${versionToFetch}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
