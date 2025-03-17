@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
-import sampleImg from '../Assets/sample-removebg-preview.png';
+import sampleImg from '../assets/sample-removebg-preview.png';
 import GetDocument from '../Components/GetDocument';
 const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
