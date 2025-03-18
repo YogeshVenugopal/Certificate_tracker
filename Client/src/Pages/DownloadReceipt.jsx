@@ -57,7 +57,7 @@ const DownloadReceipt = () => {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         if (data.length === 0) {
           showError('No student found with that admission number');
         } else {
@@ -85,9 +85,9 @@ const DownloadReceipt = () => {
     <div className='py-5'>
       {error && (
         <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-l-2 border-red-500 rounded top-2 right-5"
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-2 border-red-500 rounded top-2 right-[45%] text-xl"
         >
           {error}
         </motion.div>

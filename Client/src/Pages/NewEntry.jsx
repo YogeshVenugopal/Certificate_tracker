@@ -104,8 +104,6 @@ const NewEntry = () => {
     setPersonalEmail('');
     setParentNo('');
     setStudentNo('');
-    setError('');
-    setSuccess('');
     setFirstGraduation('');
     setDiploma('');
     setShowTable(false);
@@ -153,10 +151,14 @@ const NewEntry = () => {
   
       if (response.ok) {
         setSuccess('Student created successfully');
+        setTimeout(() => {
+          setSuccess('');
+        },2000);
         clearData(); // Make sure this clears all relevant form data
       } else {
         const errorMessage = await response.text();
-        setError(`Failed to create student: ${errorMessage}`);
+        setError("Failed to create student");
+        console.log(errorMessage);
       }
     } catch (error) {
       console.error("Error submitting student data:", error);
@@ -383,18 +385,18 @@ const NewEntry = () => {
       </form>
       {error && (
         <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-l-2 border-red-500 rounded top-2 right-5"
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-2 border-red-500 rounded top-2 right-[45%] text-xl"
         >
           {error}
         </motion.div>
       )}
       {success && (
         <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute px-3 py-3 font-bold text-green-500 bg-white border-l-2 border-green-500 rounded top-2 right-5"
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute px-3 py-3 font-bold text-green-500 bg-white border-2 border-green-500 rounded top-2 right-[45%] text-xl"
         >
           {success}
         </motion.div>
