@@ -391,6 +391,30 @@ const EditFile = () => {
               )}
             </div>
           </div>
+          <div className='flex items-center justify-end w-full px-[5%] py-5'>
+          {maxVersion > 0 && (
+            <div className="flex items-center">
+              <button
+                className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-l-md disabled:opacity-50"
+                onClick={() => handleVersionChange(-1)}
+                disabled={currentVersion <= 0}
+              >
+                <IoIosArrowBack />
+              </button>
+              <div className="flex items-center justify-center px-4 py-2 font-bold text-gray-700 bg-blue-200 border-t border-b border-blue-300">
+                Version: {currentVersion}
+              </div>
+              <button
+                className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-r-md disabled:opacity-50"
+                onClick={() => handleVersionChange(1)}
+                disabled={currentVersion >= maxVersion}
+              >
+                <IoIosArrowForward />
+              </button>
+            </div>
+          )}
+          </div>
+          
           {formData.files && formData.files.length > 0 && (
             <DocumentTable
               studentData={formData}
@@ -440,27 +464,6 @@ const EditFile = () => {
             </div>
           )}
           <div className="flex items-center justify-between mx-10 my-5">
-            {maxVersion > 0 && (
-              <div className="flex items-center">
-                <button
-                  className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-l-md disabled:opacity-50"
-                  onClick={() => handleVersionChange(-1)}
-                  disabled={currentVersion <= 0}
-                >
-                  <IoIosArrowBack />
-                </button>
-                <div className="flex items-center justify-center px-4 py-2 font-bold text-gray-700 bg-blue-200 border-t border-b border-blue-300">
-                  Version: {currentVersion}
-                </div>
-                <button
-                  className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-r-md disabled:opacity-50"
-                  onClick={() => handleVersionChange(1)}
-                  disabled={currentVersion >= maxVersion}
-                >
-                  <IoIosArrowForward />
-                </button>
-              </div>
-            )}
             <div className="flex items-center">
               {editMode ? (
                 <span className='flex justify-end gap-4'>
