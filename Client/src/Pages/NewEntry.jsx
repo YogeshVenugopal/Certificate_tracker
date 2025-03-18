@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
-import sampleImg from '../assets/sample-removebg-preview.png';
+import sampleImg from '../assets/sampleImage.png';
 import GetDocument from '../Components/GetDocument';
 import { API_CALL } from '../Utils/utils';
 const NewEntry = () => {
@@ -446,7 +446,7 @@ const NewEntry = () => {
               }}
               src={sampleImg}
               alt="Img"
-              className='grayscale'
+              className='mt-10 grayscale'
             />
           </div>}
 
