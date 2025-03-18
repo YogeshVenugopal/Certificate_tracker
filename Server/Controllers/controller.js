@@ -496,15 +496,15 @@ export const downloadStudentXL = async (req, res) => {
         summarySheet.cell("C5").value(studentData.studentInfo.name);
         summarySheet.cell("C6").value(studentData.studentInfo.student);
         summarySheet.cell("C7").value(studentData.studentInfo.email);
-        summarySheet.cell("C8").value(studentData.studentInfo.department);
-        summarySheet.cell("C9").value(studentData.studentInfo.student_no);
+        summarySheet.cell("C9").value(studentData.studentInfo.department);
+        summarySheet.cell("C8").value(studentData.studentInfo.student_no);
         summarySheet.cell("C10").value(studentData.studentInfo.parent_name);
         summarySheet.cell("C11").value(studentData.studentInfo.parent_no);
         summarySheet.cell("C12").value(studentData.studentInfo.quota);
         summarySheet.cell("C13").value(studentData.studentInfo.studies);
 
         // Start row for document records (adjust based on your template)
-        const startRow = 15;
+        const startRow = 17;
         
         // console.log("check four");
         // Add document status data
