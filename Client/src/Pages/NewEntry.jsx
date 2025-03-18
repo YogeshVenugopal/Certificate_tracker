@@ -264,7 +264,7 @@ const NewEntry = () => {
               name="parentNo"
               id="parentNo"
               placeholder="Enter Parent Mobile Number"
-              value={parentNo}
+              value={parentNo === 0 ? '' : parentNo}
               onChange={(e) => setParentNo(e.target.value)}
             />
           </div>
@@ -278,7 +278,7 @@ const NewEntry = () => {
               name="studentNo"
               id="studentNo"
               placeholder="Enter Student Mobile Number"
-              value={studentNo}
+              value={studentNo === 0 ? '' : studentNo}
               onChange={(e) => setStudentNo(e.target.value)}
             />
           </div>
