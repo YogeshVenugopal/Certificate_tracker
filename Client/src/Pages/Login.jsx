@@ -42,7 +42,7 @@ const Login = () => {
 
                 setTimeout(() => {
                     navigate('/new-entry');
-                }, 1500);
+                }, 500);
             } else {
                 addMessage(data.error || 'Invalid credentials', 'error');
             }
