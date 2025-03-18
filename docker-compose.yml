@@ -8,6 +8,8 @@ services:
       - "3000:3000"
     depends_on:
       - backend
+    environment:
+      - NODE_ENV=production
 
   backend:
     build:
@@ -31,13 +33,11 @@ services:
       POSTGRES_PASSWORD: yogesh05
       POSTGRES_DB: Kgcarv2
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - Kgcarv2:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-      - ./init-user.sql:/docker-entrypoint-initdb.d/init-user.sql
     ports:
       - "5432:5432"
     restart: always
 
 volumes:
-  postgres-data:
-    external: false
+  Kgcarv2:

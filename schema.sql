@@ -494,4 +494,3 @@ ALTER TABLE ONLY public.versions
 --
 -- PostgreSQL database dump complete
 --
-
