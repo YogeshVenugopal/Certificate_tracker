@@ -47,7 +47,7 @@ const EditStudent = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_CALL}/search-student/${admissionNumber}/lock`, {
+      const response = await fetch(`${API_CALL}/search-student/${admissionNumber}/unlock`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ const EditStudent = () => {
         <motion.div
           initial={{ opacity: 0, y: -100 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-2 border-red-500 rounded top-2 right-[45%] text-xl"
+          className="absolute px-3 py-3 font-bold text-red-500 border-2 bg-red-100 border-red-500 rounded top-2 right-[45%] text-lg transform -translate-x-1/2"
         >
           {error}
         </motion.div>
@@ -99,7 +99,7 @@ const EditStudent = () => {
             <p className="text-lg text-gray-600">Loading...</p>
           </div>
         ) : (
-          <Table type='Edit' studentData={student} />
+          <Table type='View' studentData={student} />
         )}
       </div>
     </div>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 const DocumentTable = ({ studentData, editMode, updateFileData }) => {
+  // Track the initial values that came from the server
+  const [initialFileData, setInitialFileData] = useState([]);
+  
   // Initialize fileData with properly mapped data, adding id if not present
   const [fileData, setFileData] = useState(
     studentData.files.map((file, index) => ({
@@ -12,13 +15,19 @@ const DocumentTable = ({ studentData, editMode, updateFileData }) => {
 
   // Update local state when studentData changes
   useEffect(() => {
-    setFileData(
-      studentData.files.map((file, index) => ({
-        ...file,
-        id: file.id || index,
-        document: file.name
-      }))
-    );
+    const mappedFiles = studentData.files.map((file, index) => ({
+      ...file,
+      id: file.id || index,
+      document: file.name
+    }));
+    
+    setFileData(mappedFiles);
+    
+    // Store the initial state when data is first loaded
+    // This will be used to know which checkboxes should be disabled
+    if (initialFileData.length === 0) {
+      setInitialFileData(mappedFiles);
+    }
   }, [studentData]);
 
   // In DocumentTable.jsx
@@ -77,6 +86,15 @@ const DocumentTable = ({ studentData, editMode, updateFileData }) => {
     }
   };
 
+  // Helper function to check if a checkbox should be disabled
+  const isCheckboxDisabled = (fileId, field) => {
+    if (!initialFileData.length) return false;
+    
+    const initialFile = initialFileData.find(file => file.id === fileId);
+    // If the field was true in the initial data, it should be disabled
+    return initialFile && initialFile[field] === true;
+  };
+
   return (
     <div className="flex items-center justify-center w-full">
       <table className="w-[90%]">
@@ -100,9 +118,10 @@ const DocumentTable = ({ studentData, editMode, updateFileData }) => {
                     type="checkbox"
                     name="original"
                     id={`original-${file.id}`}
-                    className="w-5 h-5"
+                    className={`w-5 h-5 ${isCheckboxDisabled(file.id, 'original') ? 'opacity-60 cursor-not-allowed' : ''}`}
                     checked={file.original || false}
                     onChange={(e) => handleCheckboxChange(e, file.id, 'original')}
+                    disabled={isCheckboxDisabled(file.id, 'original')}
                   />
                 ) : (
                   file.original ? '✔️' : '❌'
@@ -114,9 +133,10 @@ const DocumentTable = ({ studentData, editMode, updateFileData }) => {
                     type="checkbox"
                     name="photocopy"
                     id={`photocopy-${file.id}`}
-                    className="w-5 h-5"
+                    className={`w-5 h-5 ${isCheckboxDisabled(file.id, 'photocopy') ? 'opacity-60 cursor-not-allowed' : ''}`}
                     checked={file.photocopy || false}
                     onChange={(e) => handleCheckboxChange(e, file.id, 'photocopy')}
+                    disabled={isCheckboxDisabled(file.id, 'photocopy')}
                   />
                 ) : (
                   file.photocopy ? '✔️' : '❌'
@@ -132,6 +152,7 @@ const DocumentTable = ({ studentData, editMode, updateFileData }) => {
                     min="0"
                     value={file.count || 1}  // Default to 1 if count is empty or not set
                     onChange={(e) => handleCountChange(e, file.id)}
+                    disabled={isCheckboxDisabled(file.id, 'photocopy')}
                   />
                 ) : (
                   file.count || "-"

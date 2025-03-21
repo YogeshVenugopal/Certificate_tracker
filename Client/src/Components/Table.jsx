@@ -30,7 +30,7 @@ const Table = ({ type, studentData }) => {
     setDownloading(true);
     try {
       // Using fetch with responseType 'blob' to handle binary data
-      const response = await fetch(`${API_CALL}/downloadStudent/${admissionNo}`, {
+      const response = await fetch(`${API_CALL}/pdfDownloader/${admissionNo}/${version}`, {
         method: 'GET',
       });
 
@@ -44,7 +44,7 @@ const Table = ({ type, studentData }) => {
         // Create a temporary anchor element to trigger the download
         const a = document.createElement('a');
         a.href = url;
-        a.download = `student_${admissionNo}_summary.xlsx`;
+        a.download = `student_${admissionNo}_summary.pdf`;
         document.body.appendChild(a);
         a.click();
 
@@ -55,7 +55,7 @@ const Table = ({ type, studentData }) => {
         setSucess('Student data downloaded successfully!');
         setTimeout(() => {
           setSucess('');
-        },3000);
+        }, 3000);
       } else {
         // Handle error response
         const errorData = await response.json();
@@ -64,7 +64,7 @@ const Table = ({ type, studentData }) => {
         setError('Failed to download student data. Please try again.');
         setTimeout(() => {
           setError('');
-        },3000);
+        }, 3000);
       }
     } catch (error) {
       console.error('Error downloading student data:', error);
@@ -72,7 +72,7 @@ const Table = ({ type, studentData }) => {
       setError('An error occurred while downloading the student data.');
       setTimeout(() => {
         setError('');
-      },3000);
+      }, 3000);
     } finally {
       setDownloading(false);
       setError('');
@@ -90,23 +90,23 @@ const Table = ({ type, studentData }) => {
       {currentItems.length > 0 ? (
         <>
           {error && (
-        <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-l-2 border-red-500 rounded top-2 right-5"
-        >
-          {error}
-        </motion.div>
-      )}
-      {sucess && (
-        <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="absolute px-3 py-3 font-bold text-green-500 bg-white border-l-2 border-green-500 rounded top-2 right-5"
-        >
-          {sucess}
-        </motion.div>
-      )}
+            <motion.div
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="absolute px-3 py-3 font-bold text-red-500 bg-white border-l-2 border-red-500 rounded top-2 right-5"
+            >
+              {error}
+            </motion.div>
+          )}
+          {sucess && (
+            <motion.div
+              initial={{ opacity: 0, y: -100 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute px-3 py-3 font-bold text-green-500 bg-green-100 border-2 border-green-500 rounded top-2 right-[45%] text-lg transform -translate-x-1/2"
+            >
+              {sucess}
+            </motion.div>
+          )}
           <table className='w-full rounded-sm'>
             <thead className='w-full font-semibold text-white bg-gray-700'>
               <tr className='text-lg h-[50px] rounded'>
@@ -132,7 +132,7 @@ const Table = ({ type, studentData }) => {
                     <h3
                       className={`underline cursor-pointer underline-offset-2 ${downloading ? 'text-gray-400' : 'text-blue-500 hover:text-blue-700'}`}
                       onClick={() =>
-                        type === "Edit"
+                        type === "View"
                           ? navigate(`${editUrl(student.admission_no, student.version)}`)
                           : handleDownload(student.admission_no, student.version)
                       }

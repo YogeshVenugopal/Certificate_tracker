@@ -87,7 +87,7 @@ const DownloadReceipt = () => {
         <motion.div
           initial={{ opacity: 0, y: -100 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute px-3 py-3 font-bold text-red-500 bg-white border-2 border-red-500 rounded top-2 right-[45%] text-xl"
+          className="absolute px-3 py-3 font-bold text-red-500 border-2 bg-red-100 border-red-500 rounded top-2 right-[45%] text-lg transform -translate-x-1/2"
         >
           {error}
         </motion.div>
