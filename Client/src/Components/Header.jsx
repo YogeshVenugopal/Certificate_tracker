@@ -11,7 +11,7 @@ const Header = ({user}) => {
   return (
     <>
         <header className='h-[80px] w-full bg-white flex items-center justify-between px-10 shadow-lg border-b border-gray-300'>
-            <div className='text-xl font-bold'>
+            <div className='text-3xl font-bold'>
                 <h1 className='text-black'>KG<span className='text-blue-500'>CAR</span> </h1>
             </div>
             <div className='flex items-center gap-5 text-lg'>

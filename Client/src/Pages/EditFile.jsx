@@ -36,6 +36,8 @@ const EditFile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isRemarkActive, setIsRemarkActive] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  
   const handleEdit = () => {
     if (currentVersion === maxVersion) {
       setEditMode(!editMode);
@@ -49,15 +51,27 @@ const EditFile = () => {
       }, 5000);
     }
   };
+  
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  const handleSave = async () => {
-
+  
+  const openConfirmationPopup = () => {
+    setShowPopup(true);
+  };
+  
+  const closeConfirmationPopup = () => {
+    setShowPopup(false);
+  };
+  
+  const handleSave = async (lockStatus) => {
+    closeConfirmationPopup();
+    
     const dataToSend = {
       ...formData,
+      locked: lockStatus,
       modifier: storedUser
-    }
+    };
     console.log("Sending data", dataToSend);
 
     try {
@@ -92,6 +106,7 @@ const EditFile = () => {
       }, 5000);
     }
   };
+  
   const handleVersionChange = (increment) => {
     const newVersion = currentVersion + increment;
     if (newVersion >= 0 && newVersion <= maxVersion) {
@@ -102,6 +117,7 @@ const EditFile = () => {
       }
     }
   };
+  
   const fetchStudentData = async (versionToFetch) => {
     setLoading(true);
     try {
@@ -137,11 +153,36 @@ const EditFile = () => {
       setLoading(false);
     }
   };
+  
   useEffect(() => {
     const initialVersion = parseInt(version) || 0;
     setCurrentVersion(initialVersion);
     fetchStudentData(initialVersion);
   }, [id, version]);
+
+
+  function formatDate(isoDateString) {
+    const date = new Date(isoDateString);
+
+    // Extract date components
+    const day = String(date.getUTCDate()).padStart(2, '0'); // Use UTC methods for consistent results
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = date.getUTCFullYear();
+
+    // Extract time components
+    let hours = date.getUTCHours();
+    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+    hours = hours % 12 || 12; // Convert to 12-hour format
+
+    // Format the date and time
+    const formattedDate = `${day}-${month}-${year}`;
+    const formattedTime = `${hours}:${minutes} ${ampm}`;
+
+    return `${formattedDate} at ${formattedTime}`;
+  }
+
+
   const updateFileData = (index, field, value) => {
     if (formData.files && formData.files.length > 0) {
       const updatedFiles = [...formData.files];
@@ -160,10 +201,51 @@ const EditFile = () => {
       });
     }
   };
+  
   const handleRemarkClick = () => {
     setIsRemarkActive(true);
   };
-  // console.log(currentVersion, maxVersion)
+  
+  // Confirmation Popup Component
+  const ConfirmationPopup = () => {
+    const [localLocked, setLocalLocked] = useState(formData.locked || false);
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
+          <h3 className="mb-4 text-xl font-bold text-gray-800">Confirm Save</h3>
+          <p className="mb-6 text-gray-600">Have you finished updating the student details?</p>
+          
+          <div className="flex items-center mb-6">
+            <input
+              type="radio"
+              id="lockStatus"
+              checked={localLocked}
+              onChange={(e) => setLocalLocked(e.target.checked)}
+              className="w-4 h-4 mr-2 text-blue-600 border-gray-300 rounded-full focus:ring-blue-500"
+            />
+            <label htmlFor="lockStatus" className="text-gray-700">Set as locked</label>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeConfirmationPopup}
+              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => handleSave(localLocked)}
+              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div>
       {loading ? (
@@ -390,7 +472,7 @@ const EditFile = () => {
                 <div className="px-4 py-2 text-black bg-blue-100 border border-blue-300 rounded-md">
                   <span className="font-bold">{
                     currentVersion === 0 ? 'Created by:' : 'Modified by:'
-                  }</span> {formData.username}
+                  }</span> {formData.username} on {formatDate(formData.date)}
                 </div>
               </div>
             )}
@@ -468,24 +550,12 @@ const EditFile = () => {
           <div className="flex items-center justify-between mx-10 my-5">
             <div className="flex items-center">
               {editMode ? (
-                <span className='flex justify-end gap-4'>
-                  <div className='flex items-center gap-4'>
-                    <p>Confirmed the changes</p>
-                    <input
-                      type="checkbox"
-                      name="locked"
-                      id="locked"
-                      checked={formData.locked || false}
-                      onChange={(e) => setFormData({ ...formData, locked: e.target.checked })}
-                    />
-                  </div>
-                  <button
-                    className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md"
-                    onClick={handleSave}
-                  >
-                    Save
-                  </button>
-                </span>
+                <button
+                  className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md"
+                  onClick={openConfirmationPopup}
+                >
+                  Save
+                </button>
               ) : (
                 <button
                   className={`px-4 py-2 font-bold text-white rounded-md ${currentVersion === maxVersion ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
@@ -497,9 +567,13 @@ const EditFile = () => {
               )}
             </div>
           </div>
+          
+          {/* Confirmation Popup */}
+          {showPopup && <ConfirmationPopup />}
         </div>
       )}
     </div>
   );
 };
+
 export default EditFile;

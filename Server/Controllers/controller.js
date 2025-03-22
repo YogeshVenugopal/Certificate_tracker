@@ -102,7 +102,7 @@ export const createStudent = async (req, res) => {
         const studiesValue = studies ?? null;
 
         await pool.query(
-            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, parent_name, quota, studies, username, version) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, parent_name, quota, studies, username, version, date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())',
             [name, admission_no, email, department, student_no, parent_no, parent_name, quotaValue, studiesValue, username, 0]
         );
 
@@ -199,7 +199,7 @@ export const getStudent = async (req, res) => {
 
         // Get student details - modified to include version matching
         const studentInfoQuery = `
-            SELECT name, email, department, student_no, parent_no, quota, version, studies, parent_name, username
+            SELECT name, email, department, student_no, parent_no, quota, version, studies, parent_name, username , date
             FROM student_info
             WHERE student = $1 and version = $2
         `;
@@ -413,8 +413,8 @@ export const updateStudent = async (req, res) => {
 
         // Insert new student_info ONLY if student info changed
         await pool.query(
-            `INSERT INTO student_info (student, name, email, department, student_no, parent_no, parent_name, quota, studies, version, username) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            `INSERT INTO student_info (student, name, email, department, student_no, parent_no, parent_name, quota, studies, version, username, date) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
             [admission_no, name, email, department, student_no, parent_no, parent_name, quota, studies, currentVersion + 1, modifier]
         );
 
@@ -651,6 +651,8 @@ export const downloadStudent = async (req, res) => {
 export const getPdf = async (req, res) => {
     try {
         const { admission_no, version } = req.params;
+        // Add a query parameter to determine if it's a preview or download
+        const isPreview = req.query.preview === 'true';
 
         // 1. Fetch student basic info from student table
         const studentQuery = 'SELECT admission_no, version_count FROM student WHERE admission_no = $1 AND version_count = $2';
@@ -686,7 +688,6 @@ export const getPdf = async (req, res) => {
 
         const date = versionResult.rows[0];
 
-        console.log(date.date);
 
         // 4. Fetch records from the record table based on student and version
         const recordsQuery = `
@@ -704,17 +705,24 @@ export const getPdf = async (req, res) => {
 
         // Generate PDF
         const doc = new PDFDocument({ margin: 50, bufferPages: true });
-
-        // Set response headers for PDF download
+        
+        // Set response headers based on whether this is a preview or download
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=student_${admission_no}_v${version}.pdf`);
+        
+        if (isPreview) {
+            // For preview, set inline disposition
+            res.setHeader('Content-Disposition', 'inline');
+        } else {
+            // For download, set attachment disposition
+            res.setHeader('Content-Disposition', `attachment; filename=student_${admission_no}_v${version}.pdf`);
+        }
 
         // Pipe the PDF to the response
         doc.pipe(res);
 
         // Create PDF content
         generatePDF(doc, studentData);
-
+        
         // End the document which triggers the response
         doc.end();
 
@@ -723,7 +731,6 @@ export const getPdf = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
-
 /**
  * Function to generate PDF with proper formatting
  * @param {PDFDocument} doc - PDF document instance
@@ -733,10 +740,10 @@ function generatePDF(doc, data) {
     // Set document to have exactly 1 page
     const pageHeight = doc.page.height;
     const contentPerPage = pageHeight - 100; // Subtract margins
-    
+
     // Reduce margin and spacing to fit more content
     const margin = 30;
-    
+
     // Add title with smaller font
     doc.fontSize(16).text('STUDENT RECORD', { align: 'center' });
     doc.moveDown(0.5);
@@ -819,11 +826,11 @@ function generatePDF(doc, data) {
 
         // Optimize table column widths for better fit
         const colWidths = [30, 300, 60, 60, 50]; // Adjusted widths
-        
+
         // Draw optimized table header
         const tableY = doc.y;
         const headerHeight = drawTableHeader(doc, tableY, ['S.No', 'Document', 'Original', 'Photocopy', 'Count'], colWidths);
-        
+
         // Table rows with compact styling
         let currentY = headerHeight;
         data.records.forEach((record, index) => {
@@ -838,17 +845,17 @@ function generatePDF(doc, data) {
             // Use smaller font to fit more rows
             doc.fontSize(8);
             currentY = drawTableRowWithBorders(doc, currentY, rowData, colWidths);
-            
+
             // If we're getting too close to the bottom of the page, compress further
             if (currentY > 700 && index < data.records.length - 1) {
                 // Reduce row height for remaining items
-                drawTableRowWithBorders = function(doc, y, data, widths) {
+                drawTableRowWithBorders = function (doc, y, data, widths) {
                     let xPos = margin;
                     const rowHeight = 15; // Even smaller row height
-                    
+
                     // Calculate total width
                     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
-                    
+
                     // Draw the cell texts with minimal spacing
                     data.forEach((text, i) => {
                         // Truncate text if too long to fit cell
@@ -856,35 +863,35 @@ function generatePDF(doc, data) {
                         if (i === 1 && cellText.length > 40) {
                             cellText = cellText.substring(0, 37) + '...';
                         }
-                        
+
                         doc.fillColor('#000000')
-                           .text(cellText, xPos + 2, y + 3, {
+                            .text(cellText, xPos + 2, y + 3, {
                                 width: widths[i] - 4,
                                 align: i === 0 ? 'center' : i === 1 ? 'left' : 'center',
                                 lineBreak: false
                             });
-                        
+
                         // Draw minimal column separator
                         doc.moveTo(xPos, y)
-                           .lineTo(xPos, y + rowHeight)
-                           .stroke();
-                           
+                            .lineTo(xPos, y + rowHeight)
+                            .stroke();
+
                         xPos += widths[i];
                     });
-                    
+
                     // Draw outer borders
                     doc.moveTo(xPos, y)
-                       .lineTo(xPos, y + rowHeight)
-                       .stroke();
+                        .lineTo(xPos, y + rowHeight)
+                        .stroke();
                     doc.moveTo(margin, y + rowHeight)
-                       .lineTo(xPos, y + rowHeight)
-                       .stroke();
-                    
+                        .lineTo(xPos, y + rowHeight)
+                        .stroke();
+
                     return y + rowHeight;
                 };
             }
         });
-        
+
         doc.y = currentY + 5;
     } else {
         doc.fontSize(9).text('No document records found.');
@@ -897,16 +904,16 @@ function generatePDF(doc, data) {
             doc.moveDown(0.3);
             doc.fontSize(12).text('Remarks', { underline: true });
             doc.moveDown(0.3);
-            
+
             // Calculate available height for remarks
             const availableHeight = 780 - doc.y;
-            
+
             // Truncate remarks if necessary
             let remarkText = data.remark;
             if (remarkText.length > availableHeight / 3) { // Rough estimate of characters that might fit
                 remarkText = remarkText.substring(0, availableHeight / 3) + '...';
             }
-            
+
             doc.fontSize(8).text(remarkText);
         }
     }
@@ -918,46 +925,46 @@ function generatePDF(doc, data) {
 function drawTableHeader(doc, y, headers, widths) {
     let xPos = 30; // Use smaller margin
     const rowHeight = 18; // Reduced height
-    
+
     // Calculate total width
     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
-    
+
     // Draw background for header
     doc.rect(xPos, y, totalWidth, rowHeight)
-       .fillAndStroke('#e6e6e6', '#000000');
-    
+        .fillAndStroke('#e6e6e6', '#000000');
+
     // Draw the header texts with smaller font
     doc.font('Helvetica-Bold').fontSize(9);
     headers.forEach((text, i) => {
         doc.fillColor('#000000')
-           .text(text, xPos + 3, y + 5, {
+            .text(text, xPos + 3, y + 5, {
                 width: widths[i] - 6,
                 align: i === 0 ? 'center' : i === 1 ? 'left' : 'center'
             });
-            
+
         // Draw vertical line for column
         doc.moveTo(xPos, y)
-           .lineTo(xPos, y + rowHeight)
-           .stroke();
-           
+            .lineTo(xPos, y + rowHeight)
+            .stroke();
+
         xPos += widths[i];
     });
-    
+
     // Draw the final vertical line
     doc.moveTo(xPos, y)
-       .lineTo(xPos, y + rowHeight)
-       .stroke();
-       
+        .lineTo(xPos, y + rowHeight)
+        .stroke();
+
     // Draw horizontal lines for top and bottom
     doc.moveTo(30, y)
-       .lineTo(xPos, y)
-       .stroke();
+        .lineTo(xPos, y)
+        .stroke();
     doc.moveTo(30, y + rowHeight)
-       .lineTo(xPos, y + rowHeight)
-       .stroke();
-       
+        .lineTo(xPos, y + rowHeight)
+        .stroke();
+
     doc.font('Helvetica');
-    
+
     return y + rowHeight;
 }
 
@@ -967,15 +974,15 @@ function drawTableHeader(doc, y, headers, widths) {
 function drawTableRowWithBorders(doc, y, data, widths) {
     let xPos = 30; // Use smaller margin
     const rowHeight = 16; // Reduced height
-    
+
     // Calculate total width
     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
-    
+
     // Draw row background (lighter alternating colors to maintain readability)
     const isEvenRow = Math.floor(y / rowHeight) % 2 === 0;
     doc.rect(xPos, y, totalWidth, rowHeight)
-       .fillAndStroke(isEvenRow ? '#ffffff' : '#f9f9f9', '#cccccc');
-    
+        .fillAndStroke(isEvenRow ? '#ffffff' : '#f9f9f9', '#cccccc');
+
     // Draw the cell texts
     doc.fontSize(8); // Smaller font for better fit
     data.forEach((text, i) => {
@@ -984,32 +991,32 @@ function drawTableRowWithBorders(doc, y, data, widths) {
         if (i === 1 && cellText.length > 45) { // Document name column
             cellText = cellText.substring(0, 42) + '...';
         }
-        
+
         doc.fillColor('#000000')
-           .text(cellText, xPos + 3, y + 4, {
+            .text(cellText, xPos + 3, y + 4, {
                 width: widths[i] - 6,
                 align: i === 0 ? 'center' : i === 1 ? 'left' : 'center',
                 lineBreak: false
             });
-            
+
         // Draw vertical line for column (lighter stroke)
         doc.strokeColor('#cccccc')
-           .moveTo(xPos, y)
-           .lineTo(xPos, y + rowHeight)
-           .stroke();
-           
+            .moveTo(xPos, y)
+            .lineTo(xPos, y + rowHeight)
+            .stroke();
+
         xPos += widths[i];
     });
-    
+
     // Draw the final vertical line
     doc.moveTo(xPos, y)
-       .lineTo(xPos, y + rowHeight)
-       .stroke();
-       
+        .lineTo(xPos, y + rowHeight)
+        .stroke();
+
     // Draw horizontal line for bottom (only)
     doc.moveTo(30, y + rowHeight)
-       .lineTo(xPos, y + rowHeight)
-       .stroke();
-    
+        .lineTo(xPos, y + rowHeight)
+        .stroke();
+
     return y + rowHeight;
 }

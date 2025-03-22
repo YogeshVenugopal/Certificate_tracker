@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ReactPagination from 'react-paginate';
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { API_CALL } from '../Utils/utils';
+
 const Table = ({ type, studentData }) => {
   const navigate = useNavigate();
   const [currentItems, setCurrentItems] = useState([]);
@@ -29,46 +30,17 @@ const Table = ({ type, studentData }) => {
   const handleDownload = async (admissionNo, version) => {
     setDownloading(true);
     try {
-      // Using fetch with responseType 'blob' to handle binary data
-      const response = await fetch(`${API_CALL}/pdfDownloader/${admissionNo}/${version}`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        // Get the blob directly since we know the backend is sending a file
-        const blob = await response.blob();
-
-        // Create a URL for the blob
-        const url = window.URL.createObjectURL(blob);
-
-        // Create a temporary anchor element to trigger the download
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `student_${admissionNo}_summary.pdf`;
-        document.body.appendChild(a);
-        a.click();
-
-        // Clean up
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        setSucess('Student data downloaded successfully!');
-        setTimeout(() => {
-          setSucess('');
-        }, 3000);
-      } else {
-        // Handle error response
-        const errorData = await response.json();
-        console.error('Failed to download student data:', errorData);
-        // alert(errorData.error || 'Failed to download student data. Please try again.');
-        setError('Failed to download student data. Please try again.');
-        setTimeout(() => {
-          setError('');
-        }, 3000);
-      }
+      // Construct the PDF URL
+      const pdfUrl = `${API_CALL}/pdfDownloader/${admissionNo}/${version}?preview=true`;
+      
+      console.log('Attempting to open PDF at URL:', pdfUrl);
+      
+      // Open the PDF in a new tab
+      window.open(pdfUrl, '_blank');
+      
+      console.log('PDF preview request sent');
     } catch (error) {
-      console.error('Error downloading student data:', error);
-      // alert('An error occurred while downloading the student data.');
+      console.error('Error details:', error);
       setError('An error occurred while downloading the student data.');
       setTimeout(() => {
         setError('');
@@ -110,13 +82,13 @@ const Table = ({ type, studentData }) => {
           <table className='w-full rounded-sm'>
             <thead className='w-full font-semibold text-white bg-gray-700'>
               <tr className='text-lg h-[50px] rounded'>
-                <th className='w-[10%] text-center'>S.No</th>
-                <th className='w-[30%] text-center'>Student Name</th>
-                <th className='w-[20%] text-center'>Admission No.</th>
-                <th className='w-[10%] text-center'>Department</th>
-                <th className='w-[10%] text-center'>Studies</th>
-                <th className='w-[10%] text-center'>Version</th>
-                <th className='w-[10%] text-center'>Action</th>
+                <th className='w-[10%] text-center'>S.NO</th>
+                <th className='w-[30%] text-center'>STUDENT NAME</th>
+                <th className='w-[20%] text-center'>ADMISSION NO.</th>
+                <th className='w-[10%] text-center'>DEPARTMENT</th>
+                <th className='w-[10%] text-center'>STUDIES</th>
+                <th className='w-[10%] text-center'>VERSION</th>
+                <th className='w-[10%] text-center'>ACTION</th>
               </tr>
             </thead>
             <tbody>
@@ -137,7 +109,7 @@ const Table = ({ type, studentData }) => {
                           : handleDownload(student.admission_no, student.version)
                       }
                     >
-                      {downloading && type === "Download" ? "Downloading..." : type}
+                      {downloading && type === "Download" ? "Loading..." : type}
                     </h3>
                   </td>
                 </tr>

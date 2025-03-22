@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
 import sampleImg from '../assets/sampleImage.png';
 import GetDocument from '../Components/GetDocument';
 import { API_CALL } from '../Utils/utils';
+
+const FORM_STORAGE_KEY = 'newEntryFormData';
+
 const NewEntry = () => {
   const [studentName, setStudentName] = useState('');
   const [adminNo, setAdminNo] = useState('');
@@ -24,34 +27,87 @@ const NewEntry = () => {
   const [selectedDocs, setSelectedDocs] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'));
 
+  // Load saved form data when component mounts
+  useEffect(() => {
+    const savedFormData = localStorage.getItem(FORM_STORAGE_KEY);
+    if (savedFormData) {
+      const parsedData = JSON.parse(savedFormData);
+      setStudentName(parsedData.studentName || '');
+      setAdminNo(parsedData.adminNo || '');
+      setParentName(parsedData.parentName || '');
+      setDept(parsedData.dept || '');
+      setQuota(parsedData.quota || '');
+      setStudies(parsedData.studies || '');
+      setPersonalEmail(parsedData.personalEmail || '');
+      setParentNo(parsedData.parentNo || 0);
+      setStudentNo(parsedData.studentNo || 0);
+      setFirstGraduation(parsedData.firstGraduation || null);
+      setDiploma(parsedData.diploma || null);
+      setShowTable(parsedData.showTable || false);
+      setDocuments(parsedData.documents || []);
+      setSelectedDocs(parsedData.selectedDocs || []);
+    }
+  }, []);
+
+  // Save form data whenever any field changes
+  useEffect(() => {
+    const formData = {
+      studentName,
+      adminNo,
+      parentName,
+      dept,
+      quota,
+      studies,
+      personalEmail,
+      parentNo,
+      studentNo,
+      firstGraduation,
+      diploma,
+      showTable,
+      documents,
+      selectedDocs
+    };
+    localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+  }, [
+    studentName, 
+    adminNo, 
+    parentName, 
+    dept, 
+    quota, 
+    studies, 
+    personalEmail, 
+    parentNo, 
+    studentNo, 
+    firstGraduation, 
+    diploma, 
+    showTable, 
+    documents, 
+    selectedDocs
+  ]);
+
   const fetchDocuments = async (document) => {
     if (!document) {
         setError('Invalid document category');
         setLoading(false);
         return;
     }
-    // console.log(document);
     setLoading(true);
     try {
         const response = await fetch(`${API_CALL}/getDocument/${document}`);
         if (!response.ok) throw new Error('Failed to fetch documents');
 
         const result = await response.json();
-        // console.log('API Response:', result);
 
-        // Check if 'data' array exists and contains at least one object
         if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
             throw new Error('No documents found');
         }
 
-        // Extract documents from 'file' key
         const documentNames = result.data[0].file;
 
         if (!documentNames || !Array.isArray(documentNames) || documentNames.length === 0) {
             throw new Error('No documents found');
         }
 
-        // Format documents
         const formattedDocs = documentNames.map((docName, index) => ({
             id: index,
             name: docName,
@@ -69,8 +125,7 @@ const NewEntry = () => {
     } finally {
         setLoading(false);
     }
-};
-
+  };
 
   const setTimeOut = () => {
     setTimeout(() => {
@@ -78,6 +133,7 @@ const NewEntry = () => {
       setSuccess('');
     }, 3000);
   };
+
   const determineDocCategory = (studies, quota, firstGraduation, diploma) => {
     if (studies === 'UG' && quota === 'GQ' && !firstGraduation) return 'UG+GQ';
     if (studies === 'UG' && quota === 'GQ' && firstGraduation) return 'UG+GQ&FG';
@@ -108,10 +164,12 @@ const NewEntry = () => {
     setDiploma('');
     setShowTable(false);
     setDocuments([]);
-    setSelectedDocs([]);  
+    setSelectedDocs([]);
+    
+    // Clear saved form data from localStorage
+    localStorage.removeItem(FORM_STORAGE_KEY);
   }
 
-  console.log(selectedDocs)
   const handleSubmitStudent = async () => {
     const studentData = {
       username: user,
@@ -136,10 +194,6 @@ const NewEntry = () => {
       studentData.diploma = diploma; 
     }
     
-  
-    // console.log(studentData);
-
-  
     try {
       const response = await fetch(`${API_CALL}/create-student`, {
         method: 'POST',
@@ -154,7 +208,7 @@ const NewEntry = () => {
         setTimeout(() => {
           setSuccess('');
         },2000);
-        clearData(); // Make sure this clears all relevant form data
+        clearData(); // This will clear form data and localStorage
       } else {
         const errorMessage = await response.text();
         setError("Failed to create student");
@@ -182,7 +236,6 @@ const NewEntry = () => {
       return;
     }
     const docCategory = determineDocCategory(studies, quota, firstGraduation, diploma);
-    // console.log(docCategory);
     if (docCategory) {
       fetchDocuments(docCategory);
       setShowTable(true);
@@ -452,8 +505,6 @@ const NewEntry = () => {
               className='mt-10 grayscale'
             />
           </div>}
-
-
     </>
   );
 };
