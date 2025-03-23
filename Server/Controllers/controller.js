@@ -1,6 +1,7 @@
 import pool from "../Config/db.js";
 import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
+import transporter from "../Config/email.js";
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -123,6 +124,86 @@ export const createStudent = async (req, res) => {
             }
         }
 
+        const mailOptions = {
+            from: process.env.SENDER_MAIL,
+            to: email,
+            subject: `Welcome ${name}, your data has been created successfully!`,
+            html: `
+                <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+                    <h2 style="color: #4CAF50;">Student Registration Confirmation</h2>
+                    <p>Dear ${name},</p>
+                    <p>Your student data has been successfully created. Below are your details:</p>
+        
+                    <table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%; text-align: left;">
+                        <tr style="background-color: #f2f2f2;">
+                            <th>Field</th>
+                            <th>Details</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Admission No</strong></td>
+                            <td>${admission_no}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Name</strong></td>
+                            <td>${name}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email</strong></td>
+                            <td>${email}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Department</strong></td>
+                            <td>${department}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Student No</strong></td>
+                            <td>${student_no}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Parent Name</strong></td>
+                            <td>${parent_name}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Parent No</strong></td>
+                            <td>${parent_no}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quota</strong></td>
+                            <td>${quota ?? 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Studies</strong></td>
+                            <td>${studies ?? 'N/A'}</td>
+                        </tr>
+                    </table>
+        
+                    <h3 style="margin-top: 20px;">Documents Submitted</h3>
+                    ${Array.isArray(files) && files.length > 0 ? `
+                        <table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%; text-align: left;">
+                            <tr style="background-color: #f2f2f2;">
+                                <th>Document Name</th>
+                                <th>Original</th>
+                                <th>Photocopy</th>
+                                <th>Count</th>
+                            </tr>
+                            ${files.map(file => `
+                                <tr>
+                                    <td>${file.name}</td>
+                                    <td>${file.original ? 'Yes' : 'No'}</td>
+                                    <td>${file.photocopy ? 'Yes' : 'No'}</td>
+                                    <td>${file.count ?? 0}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    ` : '<p>No documents submitted.</p>'}
+        
+                    <p>If you have any questions, feel free to contact us.</p>
+                    <p>Best Regards,<br>Admin Team</p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);        
         await pool.query("COMMIT");
         return res.status(201).json({ message: "Student records inserted successfully" });
 
@@ -434,6 +515,96 @@ export const updateStudent = async (req, res) => {
             }
         }
 
+        const mailOptions = {
+            from: process.env.SENDER_MAIL,
+            to: email,
+            subject: `Updated Student Information for ${name}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+                    <h2 style="color: #4CAF50;">Student Information Updated</h2>
+                    <p>Dear ${name},</p>
+                    <p>Your student information has been successfully updated. Here are the latest details:</p>
+        
+                    <table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%; text-align: left;">
+                        <tr style="background-color: #f2f2f2;">
+                            <th>Field</th>
+                            <th>Updated Details</th>
+                        </tr>
+                        <tr>
+                            <td><strong>Admission No</strong></td>
+                            <td>${admission_no}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Name</strong></td>
+                            <td>${name}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email</strong></td>
+                            <td>${email}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Department</strong></td>
+                            <td>${department}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Student No</strong></td>
+                            <td>${student_no}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Parent Name</strong></td>
+                            <td>${parent_name}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Parent No</strong></td>
+                            <td>${parent_no}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quota</strong></td>
+                            <td>${quota ?? 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Studies</strong></td>
+                            <td>${studies ?? 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Updated By</strong></td>
+                            <td>${modifier}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Updated Version</strong></td>
+                            <td>${currentVersion + 1}</td>
+                        </tr>
+                    </table>
+        
+                    <h3 style="margin-top: 20px;">Updated Documents</h3>
+                    ${Array.isArray(files) && files.length > 0 ? `
+                        <table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%; text-align: left;">
+                            <tr style="background-color: #f2f2f2;">
+                                <th>Document Name</th>
+                                <th>Original</th>
+                                <th>Photocopy</th>
+                                <th>Count</th>
+                            </tr>
+                            ${files.map(file => `
+                                <tr>
+                                    <td>${file.name}</td>
+                                    <td>${file.original ? 'Yes' : 'No'}</td>
+                                    <td>${file.photocopy ? 'Yes' : 'No'}</td>
+                                    <td>${file.count ?? 0}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    ` : '<p>No document updates.</p>'}
+        
+                    ${remark ? `<h3 style="margin-top: 20px;">Remarks</h3><p>${remark}</p>` : ''}
+        
+                    <p>If you have any concerns regarding these updates, please reach out to the administration.</p>
+                    <p>Best Regards,<br>Admin Team</p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);        
 
         await pool.query("COMMIT");
         return res.status(201).json({
