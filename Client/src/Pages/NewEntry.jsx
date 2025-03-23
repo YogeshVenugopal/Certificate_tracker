@@ -16,8 +16,8 @@ const NewEntry = () => {
   const [quota, setQuota] = useState('');
   const [studies, setStudies] = useState('');
   const [personalEmail, setPersonalEmail] = useState('');
-  const [parentNo, setParentNo] = useState(0);
-  const [studentNo, setStudentNo] = useState(0);
+  const [parentNo, setParentNo] = useState('');
+  const [studentNo, setStudentNo] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [firstGraduation, setFirstGraduation] = useState(null);
@@ -39,8 +39,8 @@ const NewEntry = () => {
       setQuota(parsedData.quota || '');
       setStudies(parsedData.studies || '');
       setPersonalEmail(parsedData.personalEmail || '');
-      setParentNo(parsedData.parentNo || 0);
-      setStudentNo(parsedData.studentNo || 0);
+      setParentNo(parsedData.parentNo || '');
+      setStudentNo(parsedData.studentNo || '');
       setFirstGraduation(parsedData.firstGraduation || null);
       setDiploma(parsedData.diploma || null);
       setShowTable(parsedData.showTable || false);
@@ -170,6 +170,15 @@ const NewEntry = () => {
     localStorage.removeItem(FORM_STORAGE_KEY);
   }
 
+  // Handle phone number input validation
+  const handlePhoneNumberChange = (e, setFunction) => {
+    const value = e.target.value;
+    // Only allow numeric input
+    if (value === '' || /^\d+$/.test(value)) {
+      setFunction(value);
+    }
+  };
+
   const handleSubmitStudent = async () => {
     const studentData = {
       username: user,
@@ -235,6 +244,20 @@ const NewEntry = () => {
       setTimeOut();
       return;
     }
+
+    // Validate phone numbers have exactly 10 digits
+    if (parentNo.length !== 10) {
+      setError('Parent phone number must be exactly 10 digits');
+      setTimeOut();
+      return;
+    }
+
+    if (studentNo.length !== 10) {
+      setError('Student phone number must be exactly 10 digits');
+      setTimeOut();
+      return;
+    }
+
     const docCategory = determineDocCategory(studies, quota, firstGraduation, diploma);
     if (docCategory) {
       fetchDocuments(docCategory);
@@ -319,10 +342,14 @@ const NewEntry = () => {
               type="text"
               name="parentNo"
               id="parentNo"
-              placeholder="Enter Parent Mobile Number"
-              value={parentNo === 0 ? '' : parentNo}
-              onChange={(e) => setParentNo(e.target.value)}
+              placeholder="Enter Parent Mobile Number (10 digits)"
+              value={parentNo}
+              onChange={(e) => handlePhoneNumberChange(e, setParentNo)}
+              maxLength={10}
             />
+            {parentNo && parentNo.length !== 10 && (
+              <p className="text-xs text-red-500">Phone number must be 10 digits</p>
+            )}
           </div>
           <div>
             <label htmlFor="studentNo" className="block mb-1 font-bold text-gray-700">
@@ -333,10 +360,14 @@ const NewEntry = () => {
               type="text"
               name="studentNo"
               id="studentNo"
-              placeholder="Enter Student Mobile Number"
-              value={studentNo === 0 ? '' : studentNo}
-              onChange={(e) => setStudentNo(e.target.value)}
+              placeholder="Enter Student Mobile Number (10 digits)"
+              value={studentNo}
+              onChange={(e) => handlePhoneNumberChange(e, setStudentNo)}
+              maxLength={10}
             />
+            {studentNo && studentNo.length !== 10 && (
+              <p className="text-xs text-red-500">Phone number must be 10 digits</p>
+            )}
           </div>
           <div>
             <label htmlFor="dept" className="block mb-1 font-bold text-gray-700">

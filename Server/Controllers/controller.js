@@ -1,6 +1,6 @@
 import pool from "../Config/db.js";
-import XlsxPopulate from "xlsx-populate";
 import PDFDocument from "pdfkit";
+import ExcelJS from "exceljs";
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -178,7 +178,6 @@ export const getStudent = async (req, res) => {
     try {
         const { admission_no, version } = req.params;
 
-        // Validate each parameter separately
         if (!admission_no) {
             return res.status(400).json({ error: 'Admission number is required' });
         }
@@ -187,7 +186,6 @@ export const getStudent = async (req, res) => {
             return res.status(400).json({ error: 'Version is required' });
         }
 
-        // Get student basic info
         const studentQuery = `SELECT admission_no, version_count FROM student WHERE admission_no = $1`;
         const studentResult = await pool.query(studentQuery, [admission_no]);
 
@@ -197,7 +195,6 @@ export const getStudent = async (req, res) => {
 
         const student = studentResult.rows[0];
 
-        // Get student details - modified to include version matching
         const studentInfoQuery = `
             SELECT name, email, department, student_no, parent_no, quota, version, studies, parent_name, username , date
             FROM student_info
@@ -211,7 +208,6 @@ export const getStudent = async (req, res) => {
 
         const studentInfo = studentInfoResult.rows[0];
 
-        // Get record files
         const recordQuery = `
             SELECT name, original, photocopy, count, ver
             FROM record
@@ -220,7 +216,6 @@ export const getStudent = async (req, res) => {
         const recordResult = await pool.query(recordQuery, [admission_no, version]);
         const files = recordResult.rows;
 
-        // Get remarks
         const remarksQuery = `SELECT remark FROM remarks WHERE student = $1`;
         const remarksResult = await pool.query(remarksQuery, [admission_no]);
         const remark = remarksResult.rows.length > 0 ? remarksResult.rows[0].remark : null;
@@ -241,14 +236,12 @@ export const getStudent = async (req, res) => {
 export const updateStudent = async (req, res) => {
     const { admission_no } = req.params;
     const { name, email, department, parent_name, quota, locked, studies, files, modifier, remark } = req.body;
-    const version = parseInt(req.body.version, 10);
     const parent_no = parseInt(req.body.parent_no, 10);
     const student_no = parseInt(req.body.student_no, 10);
 
     try {
         await pool.query("BEGIN");
 
-        // Validate required fields
         if (!admission_no) {
             await pool.query("ROLLBACK");
             return res.status(400).json({ error: 'Admission number is required' });
@@ -264,7 +257,6 @@ export const updateStudent = async (req, res) => {
             return res.status(400).json({ error: 'Invalid files format' });
         }
 
-        // Fetch existing student data
         const studentRes = await pool.query(
             "SELECT version_count, lock FROM student WHERE admission_no = $1",
             [admission_no]
@@ -275,28 +267,23 @@ export const updateStudent = async (req, res) => {
             return res.status(400).json({ error: 'Student not found' });
         }
 
-        // Get the current version of the student
         const currentVersion = studentRes.rows[0].version_count;
 
 
-        // Fetch latest student_info record for comparison
         const studentInfoRes = await pool.query(
             `SELECT name, email, department, student_no, parent_no, parent_name, quota, studies, username
              FROM student_info WHERE student = $1 ORDER BY version DESC LIMIT 1`,
             [admission_no]
         );
 
-        // Initialize change tracking variables
         let hasStudentInfoChanges = false;
         let hasFileChanges = false;
         let hasRemarkChanges = false;
         let anyChangesDetected = false;
 
-        // Check for student info changes
         if (studentInfoRes.rowCount > 0) {
             const existingInfo = studentInfoRes.rows[0];
 
-            // Strict comparison for each field
             hasStudentInfoChanges =
                 String(existingInfo.name || '') !== String(name || '') ||
                 String(existingInfo.email || '') !== String(email || '') ||
@@ -307,11 +294,9 @@ export const updateStudent = async (req, res) => {
                 String(existingInfo.quota || '') !== String(quota || '') ||
                 String(existingInfo.studies || '') !== String(studies || '');
         } else {
-            // No existing record found, so it's a new record
             hasStudentInfoChanges = true;
         }
 
-        // Check for file changes
         if (files && files.length > 0) {
             const existingFilesRes = await pool.query(
                 `SELECT r.name, r.original, r.photocopy, r.count
@@ -328,7 +313,6 @@ export const updateStudent = async (req, res) => {
 
             const existingFiles = existingFilesRes.rows;
 
-            // Create maps for easier comparison
             const existingFilesMap = {};
             existingFiles.forEach(file => {
                 existingFilesMap[file.name] = {
@@ -338,19 +322,14 @@ export const updateStudent = async (req, res) => {
                 };
             });
 
-            // Check each file for changes
             for (const file of files) {
                 const existingFile = existingFilesMap[file.name];
 
                 if (!existingFile) {
-                    // New file
                     hasFileChanges = true;
                     break;
                 }
 
-
-
-                // Convert to string/number for consistent comparison
                 if (
                     String(existingFile.original || '') !== String(file.original || '') ||
                     String(existingFile.photocopy || '') !== String(file.photocopy || '') ||
@@ -360,8 +339,7 @@ export const updateStudent = async (req, res) => {
                     break;
                 }
             }
-
-            // Also check if any existing files were removed
+        
             if (!hasFileChanges) {
                 const existingNames = Object.keys(existingFilesMap);
                 const newNames = files.map(file => file.name);
@@ -372,7 +350,6 @@ export const updateStudent = async (req, res) => {
 
         }
 
-        // Check for remark changes
         if (remark !== undefined) {
             const remarkResult = await pool.query(
                 `SELECT remark FROM remarks WHERE student = $1`,
@@ -382,15 +359,11 @@ export const updateStudent = async (req, res) => {
             if (remarkResult.rowCount > 0) {
                 hasRemarkChanges = String(remarkResult.rows[0].remark || '') !== String(remark || '');
             } else if (remark && remark.trim() !== '') {
-                // New remark when there wasn't one before
                 hasRemarkChanges = true;
             }
         }
 
-
-        // Determine if any changes were detected
         anyChangesDetected = hasStudentInfoChanges || hasFileChanges || hasRemarkChanges || locked;
-        // If no changes detected in ANY data, return early WITHOUT updating anything
         if (!anyChangesDetected) {
             await pool.query("COMMIT");
             return res.status(200).json({
@@ -399,19 +372,14 @@ export const updateStudent = async (req, res) => {
             });
         }
 
-
-        // Since changes were detected, increment the version
         let { lock } = studentRes.rows[0];
         lock = locked !== undefined ? locked : lock;
 
-
-        // Increment version count only ONCE regardless of what changed
         await pool.query(
             "UPDATE student SET version_count = version_count + 1, lock = $1 WHERE admission_no = $2",
             [lock, admission_no]
         );
-
-        // Insert new student_info ONLY if student info changed
+    
         await pool.query(
             `INSERT INTO student_info (student, name, email, department, student_no, parent_no, parent_name, quota, studies, version, username, date) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
@@ -445,9 +413,6 @@ export const updateStudent = async (req, res) => {
         await pool.query(`
             UPDATE versions SET version_count = $1, doc_version = $1, student_version = $1 WHERE student = $2
         `, [currentVersion + 1, admission_no]);
-
-
-        // Handle optional remark ONLY if there are remark changes
 
         if (hasRemarkChanges) {
             const remarkResult = await pool.query(
@@ -487,12 +452,10 @@ export const searchStudent = async (req, res) => {
     try {
         const { admission_no, locked } = req.params;
 
-        // Validate required fields
         if (!admission_no) {
             return res.status(400).json({ error: 'Admission number is required' });
         }
 
-        // Validate locked parameter
         let lock = null;
         if (locked === 'lock') {
             lock = true;
@@ -502,7 +465,6 @@ export const searchStudent = async (req, res) => {
             return res.status(400).json({ error: 'Invalid lock status. Use "lock" or "unlock".' });
         }
 
-        // Query the student table for basic info
         const studentQuery = `
             SELECT admission_no, version_count 
             FROM student 
@@ -515,9 +477,7 @@ export const searchStudent = async (req, res) => {
         }
 
         const student = studentResult.rows[0];
-        const latestVersion = student.version_count;
 
-        // Query the student_info table for detailed information
         const studentInfoQuery = `
             SELECT name, email, department, student_no, parent_no, parent_name, studies, quota
             FROM student_info
@@ -526,7 +486,7 @@ export const searchStudent = async (req, res) => {
             LIMIT 1
         `;
         const studentInfoResult = await pool.query(studentInfoQuery, [admission_no]);
-        // Combine and return the results
+
         res.json({
             data: [{
                 admission_no: student.admission_no,
@@ -540,88 +500,6 @@ export const searchStudent = async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error', message: error.message });
     }
 };
-
-// export const downloadStudentXL = async (req, res) => {
-//     try {
-//         const { admission_no } = req.params;
-//         if (!admission_no) {
-//             return res.status(400).json({ error: "Admission number is required" });
-//         }
-
-//         const studentQuery = `SELECT * FROM student_info WHERE student = $1`;
-//         const studentResult = await pool.query(studentQuery, [admission_no]);
-
-//         let version = studentResult.rows.length > 0 ? studentResult.rows[0].version : null;
-
-//         if (studentResult.rows.length === 0) {
-//             return res.status(404).json({ error: "Student not found" });
-//         }
-
-//         const recordQuery = `SELECT * FROM record WHERE student = $1 AND ver = $2`;
-//         const recordResult = await pool.query(recordQuery, [admission_no, version]);
-
-//         const studentData = {
-//             studentInfo: studentResult.rows[0], // Single student data
-//             records: recordResult.rows, // List of records
-//         };
-
-//         // Path to your template file - adjust this path to match your directory structure
-//         const templatePath = '../Server/files/template.xlsx';
-
-
-//         // Load the template file
-//         const workbook = await XlsxPopulate.fromFileAsync(templatePath);
-//         const summarySheet = workbook.sheet("Sheet1");
-
-
-//         if (!summarySheet) {
-//             throw new Error("Could not find the first sheet in the template");
-//         }
-
-
-//         // Fill student details from the template
-//         summarySheet.cell("C5").value(studentData.studentInfo.name);
-//         summarySheet.cell("C6").value(studentData.studentInfo.student);
-//         summarySheet.cell("C7").value(studentData.studentInfo.email);
-//         summarySheet.cell("C9").value(studentData.studentInfo.department);
-//         summarySheet.cell("C8").value(studentData.studentInfo.student_no);
-//         summarySheet.cell("C10").value(studentData.studentInfo.parent_name);
-//         summarySheet.cell("C11").value(studentData.studentInfo.parent_no);
-//         summarySheet.cell("C12").value(studentData.studentInfo.quota);
-//         summarySheet.cell("C13").value(studentData.studentInfo.studies);
-
-//         // Start row for document records (adjust based on your template)
-//         const startRow = 17;
-
-//         // Add document status data
-//         studentData.records.forEach((record, index) => {
-//             const row = index + startRow;
-//             summarySheet.cell(row, 1).value(record.name);
-//             summarySheet.cell(row, 2).value(record.original ? "Yes" : "No");
-//             summarySheet.cell(row, 3).value(record.photocopy ? "Yes" : "No");
-//             summarySheet.cell(row, 4).value(record.count);
-//             summarySheet.cell(row, 5).value(record.username);
-//         });
-
-
-//         // Generate a user-friendly filename
-//         const filename = `student_${admission_no}_summary.xlsx`;
-
-//         // Set response headers for file download
-//         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-//         res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-
-
-//         // Send the workbook directly to the response
-//         const buffer = await workbook.outputAsync();
-//         return res.send(buffer);
-
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({ error: "Internal server error" });
-//     }
-// };
-
 
 export const downloadStudent = async (req, res) => {
     try {
@@ -651,10 +529,8 @@ export const downloadStudent = async (req, res) => {
 export const getPdf = async (req, res) => {
     try {
         const { admission_no, version } = req.params;
-        // Add a query parameter to determine if it's a preview or download
         const isPreview = req.query.preview === 'true';
 
-        // 1. Fetch student basic info from student table
         const studentQuery = 'SELECT admission_no, version_count FROM student WHERE admission_no = $1 AND version_count = $2';
         const studentResult = await pool.query(studentQuery, [admission_no, version]);
 
@@ -664,7 +540,6 @@ export const getPdf = async (req, res) => {
 
         const studentBasic = studentResult.rows[0];
 
-        // 2. Fetch detailed student info from student_info table
         const infoQuery = `
         SELECT name, department, parent_name, parent_no, email, student_no, quota, studies, username 
         FROM student_info 
@@ -677,7 +552,6 @@ export const getPdf = async (req, res) => {
 
         const studentInfo = infoResult.rows[0];
 
-        // 3. Fetch version date information
         const versionQuery = `
         SELECT date FROM versions WHERE student = $1`;
         const versionResult = await pool.query(versionQuery, [admission_no]);
@@ -688,14 +562,11 @@ export const getPdf = async (req, res) => {
 
         const date = versionResult.rows[0];
 
-
-        // 4. Fetch records from the record table based on student and version
         const recordsQuery = `
         SELECT * FROM record 
         WHERE student = $1 AND ver = $2`;
         const recordsResult = await pool.query(recordsQuery, [admission_no, version]);
 
-        // Combine all data
         const studentData = {
             ...studentBasic,
             ...studentInfo,
@@ -703,27 +574,20 @@ export const getPdf = async (req, res) => {
             records: recordsResult.rows || []
         };
 
-        // Generate PDF
         const doc = new PDFDocument({ margin: 50, bufferPages: true });
-        
-        // Set response headers based on whether this is a preview or download
+
         res.setHeader('Content-Type', 'application/pdf');
-        
+
         if (isPreview) {
-            // For preview, set inline disposition
             res.setHeader('Content-Disposition', 'inline');
         } else {
-            // For download, set attachment disposition
             res.setHeader('Content-Disposition', `attachment; filename=student_${admission_no}_v${version}.pdf`);
         }
 
-        // Pipe the PDF to the response
         doc.pipe(res);
 
-        // Create PDF content
         generatePDF(doc, studentData);
-        
-        // End the document which triggers the response
+
         doc.end();
 
     } catch (error) {
@@ -731,33 +595,24 @@ export const getPdf = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
-/**
- * Function to generate PDF with proper formatting
- * @param {PDFDocument} doc - PDF document instance
- * @param {Object} data - Student data
- */
+
 function generatePDF(doc, data) {
-    // Set document to have exactly 1 page
+
     const pageHeight = doc.page.height;
-    const contentPerPage = pageHeight - 100; // Subtract margins
+    const contentPerPage = pageHeight - 100;
 
-    // Reduce margin and spacing to fit more content
+
     const margin = 30;
-
-    // Add title with smaller font
     doc.fontSize(16).text('STUDENT RECORD', { align: 'center' });
     doc.moveDown(0.5);
 
-    // Add version information in a more compact format
     doc.fontSize(8)
         .text(`Version: ${data.version_count} | Date: ${new Date(data.date).toLocaleDateString()} | Generated: ${new Date().toLocaleString()}`, { align: 'right' });
     doc.moveDown(0.5);
 
-    // Basic information section with smaller header
     doc.fontSize(12).text('Student Information', { underline: true });
     doc.moveDown(0.5);
 
-    // Create a three-column layout for student information
     const infoTable = {
         'Admission No': data.admission_no,
         'Name': data.name,
@@ -771,20 +626,17 @@ function generatePDF(doc, data) {
         'Created By': data.username
     };
 
-    // Split the data into three columns
     const itemsPerColumn = Math.ceil(Object.keys(infoTable).length / 3);
     const column1Data = Object.entries(infoTable).slice(0, itemsPerColumn);
     const column2Data = Object.entries(infoTable).slice(itemsPerColumn, itemsPerColumn * 2);
     const column3Data = Object.entries(infoTable).slice(itemsPerColumn * 2);
 
-    // Set positions for columns
     const column1X = margin;
     const column2X = 210;
     const column3X = 400;
     const startY = doc.y;
     let maxY = startY;
 
-    // Add column 1 data
     doc.fontSize(9);
     column1Data.forEach(([key, value]) => {
         doc.text(`${key}: `, column1X, doc.y, { continued: true, bold: true })
@@ -793,10 +645,8 @@ function generatePDF(doc, data) {
         maxY = Math.max(maxY, doc.y);
     });
 
-    // Reset y-position for column 2
     doc.y = startY;
 
-    // Add column 2 data
     column2Data.forEach(([key, value]) => {
         doc.text(`${key}: `, column2X, doc.y, { continued: true, bold: true })
             .text(`${value || 'N/A'}`);
@@ -804,10 +654,8 @@ function generatePDF(doc, data) {
         maxY = Math.max(maxY, doc.y);
     });
 
-    // Reset y-position for column 3
     doc.y = startY;
 
-    // Add column 3 data
     column3Data.forEach(([key, value]) => {
         doc.text(`${key}: `, column3X, doc.y, { continued: true, bold: true })
             .text(`${value || 'N/A'}`);
@@ -815,23 +663,18 @@ function generatePDF(doc, data) {
         maxY = Math.max(maxY, doc.y);
     });
 
-    // Set y-position to the lowest point after all columns
     doc.y = Math.max(doc.y, maxY);
     doc.moveDown(0.5);
 
-    // Document Records section with smaller header and more compact design
     if (data.records && data.records.length > 0) {
         doc.fontSize(12).text('Document Records', { underline: true, align: 'center' });
         doc.moveDown(0.3);
 
-        // Optimize table column widths for better fit
-        const colWidths = [30, 300, 60, 60, 50]; // Adjusted widths
+        const colWidths = [30, 300, 60, 60, 50]; 
 
-        // Draw optimized table header
         const tableY = doc.y;
         const headerHeight = drawTableHeader(doc, tableY, ['S.No', 'Document', 'Original', 'Photocopy', 'Count'], colWidths);
 
-        // Table rows with compact styling
         let currentY = headerHeight;
         data.records.forEach((record, index) => {
             const rowData = [
@@ -842,23 +685,17 @@ function generatePDF(doc, data) {
                 record.photocopy ? (record.count || '1') : '-'
             ];
 
-            // Use smaller font to fit more rows
             doc.fontSize(8);
             currentY = drawTableRowWithBorders(doc, currentY, rowData, colWidths);
 
-            // If we're getting too close to the bottom of the page, compress further
             if (currentY > 700 && index < data.records.length - 1) {
-                // Reduce row height for remaining items
-                drawTableRowWithBorders = function (doc, y, data, widths) {
+                 drawTableRowWithBorders = function (doc, y, data, widths) {
                     let xPos = margin;
-                    const rowHeight = 15; // Even smaller row height
+                    const rowHeight = 15; 
 
-                    // Calculate total width
                     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
 
-                    // Draw the cell texts with minimal spacing
                     data.forEach((text, i) => {
-                        // Truncate text if too long to fit cell
                         let cellText = text.toString();
                         if (i === 1 && cellText.length > 40) {
                             cellText = cellText.substring(0, 37) + '...';
@@ -871,7 +708,6 @@ function generatePDF(doc, data) {
                                 lineBreak: false
                             });
 
-                        // Draw minimal column separator
                         doc.moveTo(xPos, y)
                             .lineTo(xPos, y + rowHeight)
                             .stroke();
@@ -879,7 +715,6 @@ function generatePDF(doc, data) {
                         xPos += widths[i];
                     });
 
-                    // Draw outer borders
                     doc.moveTo(xPos, y)
                         .lineTo(xPos, y + rowHeight)
                         .stroke();
@@ -897,20 +732,16 @@ function generatePDF(doc, data) {
         doc.fontSize(9).text('No document records found.');
     }
 
-    // Add remarks in a more compact format if available
     if (data.remark) {
-        // Only add remarks if we have enough space
         if (doc.y < 730) {
             doc.moveDown(0.3);
             doc.fontSize(12).text('Remarks', { underline: true });
             doc.moveDown(0.3);
 
-            // Calculate available height for remarks
             const availableHeight = 780 - doc.y;
 
-            // Truncate remarks if necessary
             let remarkText = data.remark;
-            if (remarkText.length > availableHeight / 3) { // Rough estimate of characters that might fit
+            if (remarkText.length > availableHeight / 3) { 
                 remarkText = remarkText.substring(0, availableHeight / 3) + '...';
             }
 
@@ -919,21 +750,16 @@ function generatePDF(doc, data) {
     }
 }
 
-/**
- * Optimized header drawing function
- */
 function drawTableHeader(doc, y, headers, widths) {
-    let xPos = 30; // Use smaller margin
-    const rowHeight = 18; // Reduced height
+    let xPos = 30; 
+    const rowHeight = 18; 
 
-    // Calculate total width
+    
     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
 
-    // Draw background for header
     doc.rect(xPos, y, totalWidth, rowHeight)
         .fillAndStroke('#e6e6e6', '#000000');
 
-    // Draw the header texts with smaller font
     doc.font('Helvetica-Bold').fontSize(9);
     headers.forEach((text, i) => {
         doc.fillColor('#000000')
@@ -942,7 +768,6 @@ function drawTableHeader(doc, y, headers, widths) {
                 align: i === 0 ? 'center' : i === 1 ? 'left' : 'center'
             });
 
-        // Draw vertical line for column
         doc.moveTo(xPos, y)
             .lineTo(xPos, y + rowHeight)
             .stroke();
@@ -950,12 +775,10 @@ function drawTableHeader(doc, y, headers, widths) {
         xPos += widths[i];
     });
 
-    // Draw the final vertical line
     doc.moveTo(xPos, y)
         .lineTo(xPos, y + rowHeight)
         .stroke();
 
-    // Draw horizontal lines for top and bottom
     doc.moveTo(30, y)
         .lineTo(xPos, y)
         .stroke();
@@ -968,27 +791,21 @@ function drawTableHeader(doc, y, headers, widths) {
     return y + rowHeight;
 }
 
-/**
- * Optimized row drawing function
- */
 function drawTableRowWithBorders(doc, y, data, widths) {
-    let xPos = 30; // Use smaller margin
-    const rowHeight = 16; // Reduced height
+    let xPos = 30; 
+    const rowHeight = 16; 
 
-    // Calculate total width
+    
     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
 
-    // Draw row background (lighter alternating colors to maintain readability)
     const isEvenRow = Math.floor(y / rowHeight) % 2 === 0;
     doc.rect(xPos, y, totalWidth, rowHeight)
         .fillAndStroke(isEvenRow ? '#ffffff' : '#f9f9f9', '#cccccc');
 
-    // Draw the cell texts
-    doc.fontSize(8); // Smaller font for better fit
+    doc.fontSize(8); 
     data.forEach((text, i) => {
-        // Truncate text if too long to fit cell
         let cellText = text.toString();
-        if (i === 1 && cellText.length > 45) { // Document name column
+        if (i === 1 && cellText.length > 45) { 
             cellText = cellText.substring(0, 42) + '...';
         }
 
@@ -999,7 +816,6 @@ function drawTableRowWithBorders(doc, y, data, widths) {
                 lineBreak: false
             });
 
-        // Draw vertical line for column (lighter stroke)
         doc.strokeColor('#cccccc')
             .moveTo(xPos, y)
             .lineTo(xPos, y + rowHeight)
@@ -1008,15 +824,238 @@ function drawTableRowWithBorders(doc, y, data, widths) {
         xPos += widths[i];
     });
 
-    // Draw the final vertical line
     doc.moveTo(xPos, y)
         .lineTo(xPos, y + rowHeight)
         .stroke();
 
-    // Draw horizontal line for bottom (only)
     doc.moveTo(30, y + rowHeight)
         .lineTo(xPos, y + rowHeight)
         .stroke();
 
     return y + rowHeight;
 }
+
+export const generateExcelReport = async (req, res) => {
+    try {
+        const { remarks, categories } = req.body;
+
+
+        let query = `
+            SELECT 
+                s.admission_no, 
+                s.version_count,
+                si.name, 
+                si.email, 
+                si.department, 
+                si.student_no, 
+                si.parent_name, 
+                si.parent_no, 
+                si.quota,
+                si.studies,  
+                si.username,
+                v.doc_version, 
+                v.student_version,
+                v.date as version_date,
+                v.username as version_username
+            FROM student s
+            JOIN student_info si ON s.admission_no = si.student AND si.version = s.version_count  
+            JOIN versions v ON s.admission_no = v.student AND v.version_count = s.version_count
+            WHERE s.lock = true 
+        `;
+
+        const queryParams = [];
+        let paramIndex = 1;
+
+        if (categories) {
+            query += ` AND si.studies = $${paramIndex}`;
+            queryParams.push(categories);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY si.studies, s.admission_no`;
+
+        const { rows: students } = await pool.query(query, queryParams);
+
+        if (!students.length) {
+            return res.status(404).json({ success: false, message: "No students found", data: [] });
+        }
+
+        const studentIds = students.map(s => s.admission_no);
+
+        const documentQuery = `
+            SELECT student, name, original, photocopy, count, date
+            FROM record
+            WHERE student = ANY($1)
+            ORDER BY date DESC
+        `;
+        const { rows: documents } = await pool.query(documentQuery, [studentIds]);
+
+        let remarksData = [];
+        if (remarks === 'yes') {
+            const remarksQuery = `
+                SELECT student, username, remark
+                FROM remarks
+                WHERE student = ANY($1)
+            `;
+            const { rows: remarksResults } = await pool.query(remarksQuery, [studentIds]);
+            remarksData = remarksResults;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Student Report');
+
+        worksheet.properties.outlineProperties = {
+            summaryBelow: false,
+            summaryRight: false
+        };
+
+        let columns = [
+            { header: 'Admission No', key: 'admission_no', width: 15 },
+            { header: 'Name', key: 'name', width: 20 },
+            { header: 'Email', key: 'email', width: 25 },
+            { header: 'Department', key: 'department', width: 15 },
+            { header: 'Student Contact', key: 'student_no', width: 15 },
+            { header: 'Parent Name', key: 'parent_name', width: 20 },
+            { header: 'Parent Contact', key: 'parent_no', width: 15 },
+            { header: 'Quota', key: 'quota', width: 10 },
+            { header: 'Studies', key: 'studies', width: 10 },
+            { header: 'Version Count', key: 'version_count', width: 15 },
+            { header: 'Last Version Date', key: 'version_date', width: 15 },
+            { header: 'Last Version By', key: 'version_username', width: 15 },
+        ];
+
+        const allUniqueDocTypes = [...new Set(documents.map(doc => doc.name))]; 
+
+        const studentDocumentGroups = {};
+
+        documents.forEach(doc => {
+            const studentId = doc.student.toString();
+            if (!studentDocumentGroups[studentId]) {
+                studentDocumentGroups[studentId] = [];
+            }
+            studentDocumentGroups[studentId].push(doc);
+        });
+
+        allUniqueDocTypes.forEach(docName => {
+            columns.push({ header: `${docName} - Original`, key: `${docName}_original`, width: 20 });
+            columns.push({ header: `${docName} - Photocopy`, key: `${docName}_photocopy`, width: 20 });
+        });
+
+        if (remarks === 'yes') {
+            columns.push({ header: 'Remarks', key: 'remarks', width: 30 });
+        }
+
+        worksheet.columns = columns;
+
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }
+        };
+        headerRow.commit();
+
+        function createStudentRowData(student) {
+            let rowData = {
+                admission_no: student.admission_no,
+                name: student.name,
+                email: student.email,
+                department: student.department,
+                student_no: student.student_no,
+                parent_name: student.parent_name,
+                parent_no: student.parent_no,
+                quota: student.quota,
+                studies: student.studies,
+                version_count: student.version_count,
+                version_date: student.version_date ? new Date(student.version_date).toLocaleDateString() : '',
+                version_username: student.version_username || '',
+            };
+
+            const studentId = student.admission_no.toString();
+            const studentDocs = documents.filter(doc => doc.student.toString() === studentId);
+
+            const studentDocTypes = [...new Set(studentDocs.map(doc => doc.name))];
+
+            const latestDocsMap = new Map();
+            const photocopyCounts = new Map();
+
+            studentDocs.forEach(doc => {
+                if (
+                    !latestDocsMap.has(doc.name) ||
+                    new Date(doc.date) > new Date(latestDocsMap.get(doc.name).date)
+                ) {
+                    latestDocsMap.set(doc.name, doc);
+                }
+
+                if (doc.photocopy) {
+                    photocopyCounts.set(doc.name, (photocopyCounts.get(doc.name) || 0) + doc.count);
+                }
+            });
+
+            allUniqueDocTypes.forEach(docName => {
+                const hasDocType = studentDocTypes.includes(docName);
+
+                if (hasDocType) {
+                    const hasOriginal = studentDocs.some(d => d.name === docName && d.original);
+                    rowData[`${docName}_original`] = hasOriginal ? 'Original Given' : 'Not Given the document';
+
+                    const totalPhotocopyCount = photocopyCounts.get(docName) || 0;
+                    rowData[`${docName}_photocopy`] = totalPhotocopyCount > 0 ? `Photocopy Given (${totalPhotocopyCount})` : 'Not Given';
+                } else {
+                    rowData[`${docName}_original`] = 'Not Applicable';
+                    rowData[`${docName}_photocopy`] = 'Not Applicable';
+                }
+            });
+
+            if (remarks === 'yes') {
+                // Ensure remarksData is an array and filter out null/undefined values
+                const studentRemarks = Array.isArray(remarksData) 
+                    ? remarksData.filter(r => r && r.student && r.student.toString() === studentId.toString()) 
+                    : [];
+            
+                // Check if studentRemarks contains valid remark values
+                rowData.remarks = studentRemarks.length > 0 && studentRemarks.some(r => r.remark)
+                    ? studentRemarks.map(r => r.remark || 'No remarks for this student').join(', ')
+                    : 'No remarks for this student';
+            }
+            
+            return rowData;
+        }
+
+        students.forEach(student => {
+            const rowData = createStudentRowData(student);
+            const dataRow = worksheet.addRow(rowData);
+
+            dataRow.eachCell({ includeEmpty: true }, cell => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        if (buffer.length < 100) {
+            throw new Error('Generated Excel file appears to be invalid (too small)');
+        }
+
+        res.set({
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition': 'attachment; filename="student-report.xlsx"',
+            'Content-Length': buffer.length
+        });
+
+        res.send(buffer);
+    } catch (error) {
+        console.error('Error generating Excel report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating Excel report',
+            error: error.message
+        });
+    }
+};  

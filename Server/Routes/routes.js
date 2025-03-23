@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, getDocument, createStudent, deleteAllData, getEditableStudent, getStudent, updateStudent, searchStudent, downloadStudent, getPdf } from '../Controllers/controller.js';
+import { login, getDocument, createStudent, deleteAllData, getEditableStudent, getStudent, updateStudent, searchStudent, downloadStudent, getPdf, generateExcelReport } from '../Controllers/controller.js';
 
 const router = express.Router();
 
@@ -14,6 +14,7 @@ router.get('/get-document-download', downloadStudent);
 router.get('/search-student/:admission_no/:locked', searchStudent);
 // router.get('/downloadStudent/:admission_no', downloadStudentXL);
 router.get('/pdfDownloader/:admission_no/:version', getPdf)
+router.post('/generateExcel', generateExcelReport)
 
 
 export default router;
