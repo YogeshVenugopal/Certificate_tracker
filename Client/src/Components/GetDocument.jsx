@@ -36,7 +36,7 @@ const DocumentRow = ({ doc, index, handleCheckboxChange, handleCountChange }) =>
     </tr>
   );
 };
-const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent }) => {
+const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent, loading1, setLoading1}) => {
   const handleCheckboxChange = (id, field) => {
     setSelectedDocs((prevDocs) =>
       prevDocs.map((doc) =>
@@ -61,7 +61,10 @@ const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent }) => 
     );
   };
   
-  
+  const onSubmit = () => {
+    setLoading1(true);
+    handleSubmitStudent();
+  };
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-auto">
@@ -85,15 +88,22 @@ const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent }) => 
               handleCountChange={handleCountChange}
             />
           ))}
-
         </tbody>
       </table>
 
       <button
-        onClick={handleSubmitStudent}
-        className="px-6 py-2 my-4 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+        onClick={onSubmit}
+        disabled={loading1}
+        className="px-6 py-2 my-4 font-semibold text-white bg-blue-500 rounded-lg hover:bg-blue-600 flex items-center justify-center min-w-[150px]"
       >
-        Create Student
+        {loading1 ? (
+          <>
+            <div className="w-5 h-5 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
+            Processing...
+          </>
+        ) : (
+          "Create Student"
+        )}
       </button>
     </div>
   );

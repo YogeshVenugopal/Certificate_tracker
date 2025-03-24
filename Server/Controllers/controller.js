@@ -2,6 +2,9 @@ import pool from "../Config/db.js";
 import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
 import transporter from "../Config/email.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const login = async (req, res) => {
     const { username, password } = req.body;
@@ -140,15 +143,15 @@ export const createStudent = async (req, res) => {
                             <th>Details</th>
                         </tr>
                         <tr>
-                            <td><strong>Admission No</strong></td>
+                            <td><strong>Admission Number</strong></td>
                             <td>${admission_no}</td>
                         </tr>
                         <tr>
-                            <td><strong>Name</strong></td>
+                            <td><strong>Student Name</strong></td>
                             <td>${name}</td>
                         </tr>
                         <tr>
-                            <td><strong>Email</strong></td>
+                            <td><strong>Personal Email</strong></td>
                             <td>${email}</td>
                         </tr>
                         <tr>
@@ -156,7 +159,7 @@ export const createStudent = async (req, res) => {
                             <td>${department}</td>
                         </tr>
                         <tr>
-                            <td><strong>Student No</strong></td>
+                            <td><strong>Student Number</strong></td>
                             <td>${student_no}</td>
                         </tr>
                         <tr>
@@ -164,7 +167,7 @@ export const createStudent = async (req, res) => {
                             <td>${parent_name}</td>
                         </tr>
                         <tr>
-                            <td><strong>Parent No</strong></td>
+                            <td><strong>Parent Number</strong></td>
                             <td>${parent_no}</td>
                         </tr>
                         <tr>
@@ -531,15 +534,15 @@ export const updateStudent = async (req, res) => {
                             <th>Updated Details</th>
                         </tr>
                         <tr>
-                            <td><strong>Admission No</strong></td>
+                            <td><strong>Admission Number</strong></td>
                             <td>${admission_no}</td>
                         </tr>
                         <tr>
-                            <td><strong>Name</strong></td>
+                            <td><strong>Student Name</strong></td>
                             <td>${name}</td>
                         </tr>
                         <tr>
-                            <td><strong>Email</strong></td>
+                            <td><strong>Personal Email</strong></td>
                             <td>${email}</td>
                         </tr>
                         <tr>
@@ -547,7 +550,7 @@ export const updateStudent = async (req, res) => {
                             <td>${department}</td>
                         </tr>
                         <tr>
-                            <td><strong>Student No</strong></td>
+                            <td><strong>Student Number</strong></td>
                             <td>${student_no}</td>
                         </tr>
                         <tr>
@@ -555,7 +558,7 @@ export const updateStudent = async (req, res) => {
                             <td>${parent_name}</td>
                         </tr>
                         <tr>
-                            <td><strong>Parent No</strong></td>
+                            <td><strong>Parent Number</strong></td>
                             <td>${parent_no}</td>
                         </tr>
                         <tr>

@@ -33,6 +33,7 @@ const EditFile = () => {
   });
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [savingLoading, setSavingLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isRemarkActive, setIsRemarkActive] = useState(false);
@@ -66,6 +67,7 @@ const EditFile = () => {
   
   const handleSave = async (lockStatus) => {
     closeConfirmationPopup();
+    setSavingLoading(true);
     
     const dataToSend = {
       ...formData,
@@ -104,6 +106,8 @@ const EditFile = () => {
       setTimeout(() => {
         setError('');
       }, 5000);
+    } finally {
+      setSavingLoading(false);
     }
   };
   
@@ -230,15 +234,24 @@ const EditFile = () => {
           <div className="flex justify-end gap-3">
             <button
               onClick={closeConfirmationPopup}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
+              disabled={savingLoading}
+              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={() => handleSave(localLocked)}
-              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
+              disabled={savingLoading}
+              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center min-w-[80px]"
             >
-              Save
+              {savingLoading ? (
+                <>
+                  <div className="w-4 h-4 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
             </button>
           </div>
         </div>
@@ -551,14 +564,22 @@ const EditFile = () => {
             <div className="flex items-center">
               {editMode ? (
                 <button
-                  className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md"
+                  className="px-4 py-2 font-bold text-white bg-blue-500 rounded-md flex items-center justify-center min-w-[80px]"
                   onClick={openConfirmationPopup}
+                  disabled={savingLoading}
                 >
-                  Save
+                  {savingLoading ? (
+                    <>
+                      <div className="w-4 h-4 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    "Save"
+                  )}
                 </button>
               ) : (
                 <button
-                  className={`px-4 py-2 font-bold text-white rounded-md ${currentVersion === maxVersion ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
+                  className={`px-4 py-2 font-bold text-white rounded-md flex items-center justify-center min-w-[80px] ${currentVersion === maxVersion ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'}`}
                   onClick={handleEdit}
                   disabled={currentVersion !== maxVersion}
                 >

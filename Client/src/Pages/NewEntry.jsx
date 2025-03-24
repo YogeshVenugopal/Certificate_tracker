@@ -12,6 +12,7 @@ const NewEntry = () => {
   const [adminNo, setAdminNo] = useState('');
   const [parentName, setParentName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loading1, setLoading1] = useState(false);
   const [dept, setDept] = useState('');
   const [quota, setQuota] = useState('');
   const [studies, setStudies] = useState('');
@@ -180,6 +181,7 @@ const NewEntry = () => {
   };
 
   const handleSubmitStudent = async () => {
+    setLoading1(true);
     const studentData = {
       username: user,
       name: studentName,
@@ -227,6 +229,9 @@ const NewEntry = () => {
     } catch (error) {
       console.error("Error submitting student data:", error);
       setError('An unexpected error occurred');
+      setTimeOut();
+    } finally {
+      setLoading1(false);
     }
   };
   
@@ -499,7 +504,7 @@ const NewEntry = () => {
       )}
       {
         showTable ?
-          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs} handleSubmitStudent={handleSubmitStudent}/>
+          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs} handleSubmitStudent={handleSubmitStudent} loading1={loading1} setLoading1={setLoading1}/>
           :
           <div className='relative flex items-center justify-center w-full h-auto'>
             <motion.div
