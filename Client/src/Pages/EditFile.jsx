@@ -490,19 +490,19 @@ const EditFile = () => {
               </div>
             )}
             {maxVersion > 0 && (
-              <div className="flex items-center">
+              <div className="flex items-center h-[40px]">
                 <button
-                  className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-l-md disabled:opacity-50"
+                  className="px-3 py-2.5 font-bold text-white bg-blue-500 h-full rounded-l-md disabled:opacity-50"
                   onClick={() => handleVersionChange(-1)}
                   disabled={currentVersion <= 0}
                 >
                   <IoIosArrowBack />
                 </button>
-                <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold text-gray-700 bg-blue-200 border-t border-b border-blue-300">
-                  Version:{currentVersion}
+                <div className="flex items-center justify-center h-full px-4 py-2 font-bold text-gray-700 bg-blue-200 border-t border-b border-blue-300">
+                  Version{currentVersion}
                 </div>
                 <button
-                  className="px-3 py-2.5 font-bold text-white bg-blue-500 rounded-r-md disabled:opacity-50"
+                  className="h-full px-3 py-2.5 font-bold text-white bg-blue-500 rounded-r-md disabled:opacity-50"
                   onClick={() => handleVersionChange(1)}
                   disabled={currentVersion >= maxVersion}
                 >
