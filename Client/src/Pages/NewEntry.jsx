@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
+import { IoMdAdd } from 'react-icons/io'; // Added import for the icon
 import sampleImg from '../assets/sampleImage.png';
 import GetDocument from '../Components/GetDocument';
 import { API_CALL } from '../Utils/utils';
@@ -26,6 +27,8 @@ const NewEntry = () => {
   const [showTable, setShowTable] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [selectedDocs, setSelectedDocs] = useState([]);
+  const [remark, setRemark] = useState(null);
+  const [isRemarkActive, setIsRemarkActive] = useState(false);
   const user = JSON.parse(localStorage.getItem('user'));
 
   // Load saved form data when component mounts
@@ -47,6 +50,8 @@ const NewEntry = () => {
       setShowTable(parsedData.showTable || false);
       setDocuments(parsedData.documents || []);
       setSelectedDocs(parsedData.selectedDocs || []);
+      setRemark(parsedData.remark || null);
+      setIsRemarkActive(parsedData.isRemarkActive || false);
     }
   }, []);
 
@@ -66,65 +71,67 @@ const NewEntry = () => {
       diploma,
       showTable,
       documents,
-      selectedDocs
+      selectedDocs,
+      remark,
     };
     localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
   }, [
-    studentName, 
-    adminNo, 
-    parentName, 
-    dept, 
-    quota, 
-    studies, 
-    personalEmail, 
-    parentNo, 
-    studentNo, 
-    firstGraduation, 
-    diploma, 
-    showTable, 
-    documents, 
-    selectedDocs
+    studentName,
+    adminNo,
+    parentName,
+    dept,
+    quota,
+    studies,
+    personalEmail,
+    parentNo,
+    studentNo,
+    firstGraduation,
+    diploma,
+    showTable,
+    documents,
+    selectedDocs,
+    remark
   ]);
 
   const fetchDocuments = async (document) => {
     if (!document) {
-        setError('Invalid document category');
-        setLoading(false);
-        return;
+      setError('Invalid document category');
+      setLoading(false);
+      return;
     }
     setLoading(true);
     try {
-        const response = await fetch(`${API_CALL}/getDocument/${document}`);
-        if (!response.ok) throw new Error('Failed to fetch documents');
+      const response = await fetch(`${API_CALL}/getDocument/${document}`);
+      if (!response.ok) throw new Error('Failed to fetch documents');
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
-            throw new Error('No documents found');
-        }
+      if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
+        throw new Error('No documents found');
+      }
 
-        const documentNames = result.data[0].file;
+      const documentNames = result.data[0].file;
 
-        if (!documentNames || !Array.isArray(documentNames) || documentNames.length === 0) {
-            throw new Error('No documents found');
-        }
+      if (!documentNames || !Array.isArray(documentNames) || documentNames.length === 0) {
+        throw new Error('No documents found');
+      }
 
-        const formattedDocs = documentNames.map((docName, index) => ({
-            id: index,
-            name: docName,
-            original: false,
-            photocopy: false,
-            count: 0
-        }));
+      const formattedDocs = documentNames.map((docName, index) => ({
+        id: index,
+        name: docName,
+        original: false,
+        photocopy: false,
+        count: 0
+      }));
 
-        setDocuments(formattedDocs);
-        setSelectedDocs(formattedDocs);
+      setDocuments(formattedDocs);
+      setSelectedDocs(formattedDocs);
     } catch (error) {
-        console.error('Error fetching documents:', error);
-        setError(error.message);
-        setTimeOut();
+      console.error('Error fetching documents:', error);
+      setError(error.message);
+      setTimeOut();
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -166,7 +173,9 @@ const NewEntry = () => {
     setShowTable(false);
     setDocuments([]);
     setSelectedDocs([]);
-    
+    setRemark(null);
+    setIsRemarkActive(false);
+
     // Clear saved form data from localStorage
     localStorage.removeItem(FORM_STORAGE_KEY);
   }
@@ -178,6 +187,16 @@ const NewEntry = () => {
     if (value === '' || /^\d+$/.test(value)) {
       setFunction(value);
     }
+  };
+
+  // Added function to handle remark activation
+  const handleRemarkClick = () => {
+    setIsRemarkActive(true);
+  };
+
+  // Added function to handle remark text change
+  const handleChange = (e) => {
+    setRemark(e.target.value);
   };
 
   const handleSubmitStudent = async () => {
@@ -193,18 +212,19 @@ const NewEntry = () => {
       department: dept,
       quota: quota,
       studies: studies,
-      files: selectedDocs
+      files: selectedDocs,
+      remark: remark // Include remark in submission
     };
     if (studies === 'UG' || studies === 'PG') {
       if (quota === 'MQ') {
         studentData.first_graduate = firstGraduation;
       }
     }
-    
+
     if (studies === 'PG_ME') {
-      studentData.diploma = diploma; 
+      studentData.diploma = diploma;
     }
-    
+
     try {
       const response = await fetch(`${API_CALL}/create-student`, {
         method: 'POST',
@@ -213,12 +233,12 @@ const NewEntry = () => {
         },
         body: JSON.stringify(studentData)
       });
-  
+
       if (response.ok) {
         setSuccess('Student created successfully');
         setTimeout(() => {
           setSuccess('');
-        },2000);
+        }, 2000);
         clearData(); // This will clear form data and localStorage
       } else {
         const errorMessage = await response.text();
@@ -234,7 +254,7 @@ const NewEntry = () => {
       setLoading1(false);
     }
   };
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -272,7 +292,7 @@ const NewEntry = () => {
       setError('Failed to fetch documents');
     }
     setTimeOut();
-    
+
     setShowTable(true);
     setSuccess('Form submitted successfully');
     setTimeOut();
@@ -502,45 +522,80 @@ const NewEntry = () => {
           <p className="ml-2 font-semibold text-blue-500">Fetching Documents...</p>
         </div>
       )}
-      {
-        showTable ?
-          <GetDocument selectedDocs={selectedDocs} setSelectedDocs={setSelectedDocs} handleSubmitStudent={handleSubmitStudent} loading1={loading1} setLoading1={setLoading1}/>
-          :
-          <div className='relative flex items-center justify-center w-full h-auto'>
-            <motion.div
-              initial={{ y: 100 }}
-              animate={{
-                opacity: 1,
-                y: [0, 10, 0], // Bounce animation
-              }}
-              transition={{
-                duration: 1.5,
-                delay: 0.5,
-                repeat: Infinity, // Keeps the bounce looping
-                repeatType: 'loop',
-              }}
-              className='absolute z-10 flex items-center justify-center w-full text-6xl font-bold text-zinc-500 top-3'
+      {showTable ? (
+        <>
+          <GetDocument 
+            selectedDocs={selectedDocs} 
+            setSelectedDocs={setSelectedDocs} 
+            handleSubmitStudent={handleSubmitStudent} 
+            loading1={loading1} 
+            setLoading1={setLoading1} 
+          />
+          
+          {!isRemarkActive ? (
+            <div
+              onClick={handleRemarkClick}
+              className="flex flex-col items-center justify-center w-[80%] p-6 my-5 text-gray-500 border-2 border-gray-400 border-dashed rounded-md cursor-pointer hover:bg-gray-50 mx-auto"
             >
-              Ready to Generate Document
-            </motion.div>
+              <div className="flex flex-col items-center justify-center">
+                <IoMdAdd className="w-10 h-10 text-gray-400" />
+                <p className="mt-2 text-sm text-gray-500">Add a remark</p>
+              </div>
+            </div>
+          ) : (
+            <div className="w-[80%] mx-auto mt-4 mb-6">
+              <label htmlFor="remark" className="block mb-2 font-bold text-gray-700">
+                Remark:
+              </label>
+              <textarea
+                className="w-full px-4 py-3 text-gray-600 border-2 border-gray-400 rounded-md bg-gray-50 focus:outline-none focus:border-blue-500"
+                name="remark"
+                id="remark"
+                rows={4}
+                placeholder="Enter your remarks about this student..."
+                value={remark}
+                onChange={handleChange}
+              ></textarea>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className='relative flex items-center justify-center w-full h-auto'>
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{
+              opacity: 1,
+              y: [0, 10, 0], // Bounce animation
+            }}
+            transition={{
+              duration: 1.5,
+              delay: 0.5,
+              repeat: Infinity, // Keeps the bounce looping
+              repeatType: 'loop',
+            }}
+            className='absolute z-10 flex items-center justify-center w-full text-6xl font-bold text-zinc-500 top-3'
+          >
+            Ready to Generate Document
+          </motion.div>
 
-            <motion.img
-              initial={{ y: -100 }}
-              animate={{
-                opacity: 1,
-                y: [0, -10, 0], // Bounce animation
-              }}
-              transition={{
-                duration: 1.5,
-                delay: 0.5,
-                repeat: Infinity, // Keeps the bounce looping
-                repeatType: 'loop',
-              }}
-              src={sampleImg}
-              alt="Img"
-              className='mt-10 grayscale'
-            />
-          </div>}
+          <motion.img
+            initial={{ y: -100 }}
+            animate={{
+              opacity: 1,
+              y: [0, -10, 0], // Bounce animation
+            }}
+            transition={{
+              duration: 1.5,
+              delay: 0.5,
+              repeat: Infinity, // Keeps the bounce looping
+              repeatType: 'loop',
+            }}
+            src={sampleImg}
+            alt="Img"
+            className='mt-10 grayscale'
+          />
+        </div>
+      )}
     </>
   );
 };

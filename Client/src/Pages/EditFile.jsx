@@ -173,17 +173,10 @@ const EditFile = () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
     const year = date.getUTCFullYear();
 
-    // Extract time components
-    let hours = date.getUTCHours();
-    const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
-    hours = hours % 12 || 12; // Convert to 12-hour format
-
     // Format the date and time
     const formattedDate = `${day}-${month}-${year}`;
-    const formattedTime = `${hours}:${minutes} ${ampm}`;
 
-    return `${formattedDate} at ${formattedTime}`;
+    return `${formattedDate}`;
   }
 
 

@@ -70,7 +70,7 @@ export const createStudent = async (req, res) => {
         return res.status(400).json({ message: "Missing or invalid required fields." });
     }
 
-    const { quota, admission_no, name, email, department, student_no, parent_name, parent_no, files, studies, username } = postData;
+    const { quota, admission_no, name, email, department, student_no, parent_name, parent_no, files, studies, username, remark } = postData;
 
     try {
         await pool.query("BEGIN");
@@ -92,13 +92,13 @@ export const createStudent = async (req, res) => {
         );
 
         await pool.query(
-            'INSERT INTO "versions" (student, version_count, student_version, doc_version, username, date) VALUES ($1, $2, $3, $4, $5, NOW())',
-            [admission_no, 0, 0, 0, username]
+            'INSERT INTO "versions" (student, version_count, student_version, doc_version, username, date) VALUES ($1, $2, $3, $4, $5, $6)',
+            [admission_no, 0, 0, 0, username, new Date()]
         );
 
         await pool.query(
-            'INSERT INTO "remarks" (student, username) VALUES ($1, $2)',
-            [admission_no, username]
+            'INSERT INTO "remarks" (student, username, remark) VALUES ($1, $2, $3)',
+            [admission_no, username, remark]
         );
 
 
@@ -106,8 +106,8 @@ export const createStudent = async (req, res) => {
         const studiesValue = studies ?? null;
 
         await pool.query(
-            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, parent_name, quota, studies, username, version, date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())',
-            [name, admission_no, email, department, student_no, parent_no, parent_name, quotaValue, studiesValue, username, 0]
+            'INSERT INTO "student_info" (name, student, email, department, student_no, parent_no, parent_name, quota, studies, username, version, date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,$12)',
+            [name, admission_no, email, department, student_no, parent_no, parent_name, quotaValue, studiesValue, username, 0, new Date()]
         );
 
         if (Array.isArray(files) && files.length > 0) {
@@ -121,8 +121,9 @@ export const createStudent = async (req, res) => {
                 const originalValue = file.original ?? false;
                 const photocopyValue = file.photocopy ?? false;
                 await pool.query(
-                    'INSERT INTO "record" (student, name, original, photocopy, count, ver, date) VALUES ($1, $2, $3, $4, $5, $6, NOW())',
-                    [admission_no, file.name, originalValue, photocopyValue, countValue, 0]
+                    `INSERT INTO "record" (student, name, original, photocopy, count, ver, date) 
+                     VALUES ($1, $2, $3, $4, $5, $6,$7)`,
+                    [admission_no, file.name, originalValue, photocopyValue, countValue, 0, new Date()]
                 );
             }
         }
@@ -466,8 +467,8 @@ export const updateStudent = async (req, res) => {
     
         await pool.query(
             `INSERT INTO student_info (student, name, email, department, student_no, parent_no, parent_name, quota, studies, version, username, date) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
-            [admission_no, name, email, department, student_no, parent_no, parent_name, quota, studies, currentVersion + 1, modifier]
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [admission_no, name, email, department, student_no, parent_no, parent_name, quota, studies, currentVersion + 1, modifier, new Date()]
         );
 
 
@@ -489,8 +490,8 @@ export const updateStudent = async (req, res) => {
 
             await pool.query(
                 `INSERT INTO record (name, original, photocopy, count, ver, student, date) 
-                    VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-                [name, original, photocopy, count, nextVer, admission_no]
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [name, original, photocopy, count, nextVer, admission_no,new Date()]
             );
         }
 
