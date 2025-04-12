@@ -204,7 +204,9 @@ CREATE TABLE public.student_info (
     quota character varying(50),
     version integer DEFAULT 0,
     studies character varying(100) NOT NULL,
-    parent_name character varying(100) NOT NULL
+    parent_name character varying(100) NOT NULL,
+    username character varying(100) NOT NULL,
+    date date
 );
 
 
@@ -243,7 +245,8 @@ ALTER SEQUENCE public.student_info_id_seq OWNED BY public.student_info.id;
 CREATE TABLE public.users (
     id integer NOT NULL,
     username character varying(100) NOT NULL,
-    password character varying(100) NOT NULL
+    password character varying(100) NOT NULL,
+    userId integer NOT NULL
 );
 
 

@@ -1,3 +1,13 @@
+INSERT INTO users (username, password, userId) VALUES
+('Manikandan', 900413,'900413@2025'),
+('Sujith Kumar', 900911,'900911@2025'),
+('Vanisri',902250,'902250@2025'),
+('Leema Angelina',902551,'902551@2025'),
+('Raja Bharathi',902710, '902710@2025'),
+('Amirtham', 904452, '904452@2025'),
+('Bakkiyalakshmi',904697,'904697@2025'),
+('Admin', 101010, '101010@2025');
+
 INSERT INTO documents (name, type, file) VALUES
 ('UG and government quota document', 'UG+GQ', '["Admission Application Form", "Allotment Order", "AADHAR Copy", "SSLC Certificate", "HSC - 11th Certificate", "HSC - 12th Certificate", "Community Certificate", "Transfer Certificate", "Income Certificate", "Parent Photo Copy (Each One)", "Student Photo Copy (8 No.s)", "Nativity / Migration Certificate"]'),
 ('UG and government quota and first graduation document', 'UG+GQ&FG', '["Admission Application Form", "Allotment Order", "AADHAR Copy", "SSLC Certificate", "HSC - 11th Certificate", "HSC - 12th Certificate", "Community Certificate", "Transfer Certificate", "Income Certificate", "Parent Photo Copy (Each One)", "Student Photo Copy (8 No.s)", "Nativity / Migration Certificate", "First Graduation", "Joint Declaration Form", "Parent Declaration Form (17+ Years Siblings)"]'),
