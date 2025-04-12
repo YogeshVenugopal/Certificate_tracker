@@ -79,7 +79,7 @@ const Login = () => {
 
                         <form className='w-[80%] space-y-7' onSubmit={handleLogin}>
                             <div className='flex flex-col gap-3'>
-                                <label className='block font-semibold'>Username:</label>
+                                <label className='block font-semibold'>User ID:</label>
                                 <input
                                     type='text'
                                     name='username'
@@ -107,7 +107,7 @@ const Login = () => {
                                 {loading ? 'Logging in...' : 'Login'}
                             </button>
 
-                            <p>Forgot account name or password? <span className='text-blue-500 cursor-pointer'>Contact Admin</span></p>
+                            {/* <p>Forgot account name or password? <span className='text-blue-500 cursor-pointer'>Contact Admin</span></p> */}
                         </form>
                     </div>
                 </div>
