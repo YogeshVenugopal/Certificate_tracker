@@ -1,4 +1,4 @@
-INSERT INTO users (username, password, userId) VALUES
+INSERT INTO users (username, userId, password) VALUES
 ('Manikandan', 900413,'900413@2025'),
 ('Sujith Kumar', 900911,'900911@2025'),
 ('Vanisri',902250,'902250@2025'),

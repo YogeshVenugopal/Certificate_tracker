@@ -35,9 +35,24 @@ services:
     volumes:
       - Kgcarv2:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: always
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container
+    restart: always
+    ports:
+      - "5050:80"  # Access pgAdmin at http://localhost:5050
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+  
+
 volumes:
+  pgadmin_data:
   Kgcarv2:
