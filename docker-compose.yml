@@ -34,8 +34,7 @@ services:
       POSTGRES_DB: Kgcarv2
     volumes:
       - Kgcarv2:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init-combined.sql:/docker-entrypoint-initdb.d/init-combined.sql
     ports:
       - "5432:5432"
     restart: always
