@@ -56,21 +56,25 @@ export const getDocument = async (req, res) => {
 
 export const createStudent = async (req, res) => {
     const postData = req.body;
+    console.log(postData);
     if (
-        !postData ||
-        typeof postData.admission_no !== 'string' ||
-        typeof postData.name !== 'string' ||
-        typeof postData.email !== 'string' ||
-        typeof postData.department !== 'string' ||
-        typeof postData.student_no !== 'number' ||
-        typeof postData.parent_name !== 'string' ||
-        typeof postData.parent_no !== 'number' ||
-        typeof postData.username !== 'string'
+        !postData.quota ||
+        !postData.admission_no ||
+        !postData.name ||
+        !postData.email ||
+        !postData.department ||
+        !postData.student_no ||
+        !postData.parent_name ||
+        !postData.parent_no ||
+        !postData.files ||
+        !postData.studies ||
+        !postData.username
     ) {
         return res.status(400).json({ message: "Missing or invalid required fields." });
     }
 
     const { quota, admission_no, name, email, department, student_no, parent_name, parent_no, files, studies, username, remark } = postData;
+
 
     try {
         await pool.query("BEGIN");
@@ -92,8 +96,8 @@ export const createStudent = async (req, res) => {
         );
 
         await pool.query(
-            'INSERT INTO "versions" (student, version_count, student_version, doc_version, username, date) VALUES ($1, $2, $3, $4, $5, $6)',
-            [admission_no, 0, 0, 0, username, new Date()]
+            'INSERT INTO "versions" (student, version_count, student_version, doc_version, date) VALUES ($1, $2, $3, $4, $5)',
+            [admission_no, 0, 0, 0, new Date()]
         );
 
         await pool.query(
