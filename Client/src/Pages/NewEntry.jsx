@@ -414,6 +414,7 @@ const NewEntry = () => {
               <option value="AIML">AIML</option>
               <option value="CYS">CYS</option>
               <option value="Mech">Mech</option>
+              <option value="R&A">R&A</option>
             </select>
           </div>
           <div>

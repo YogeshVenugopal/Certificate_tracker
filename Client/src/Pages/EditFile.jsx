@@ -38,7 +38,7 @@ const EditFile = () => {
   const [success, setSuccess] = useState('');
   const [isRemarkActive, setIsRemarkActive] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  
+
   const handleEdit = () => {
     if (currentVersion === maxVersion) {
       setEditMode(!editMode);
@@ -52,23 +52,23 @@ const EditFile = () => {
       }, 5000);
     }
   };
-  
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  
+
   const openConfirmationPopup = () => {
     setShowPopup(true);
   };
-  
+
   const closeConfirmationPopup = () => {
     setShowPopup(false);
   };
-  
+
   const handleSave = async (lockStatus) => {
     closeConfirmationPopup();
     setSavingLoading(true);
-    
+
     const dataToSend = {
       ...formData,
       locked: lockStatus,
@@ -110,7 +110,7 @@ const EditFile = () => {
       setSavingLoading(false);
     }
   };
-  
+
   const handleVersionChange = (increment) => {
     const newVersion = currentVersion + increment;
     if (newVersion >= 0 && newVersion <= maxVersion) {
@@ -121,7 +121,7 @@ const EditFile = () => {
       }
     }
   };
-  
+
   const fetchStudentData = async (versionToFetch) => {
     setLoading(true);
     try {
@@ -157,7 +157,7 @@ const EditFile = () => {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     const initialVersion = parseInt(version) || 0;
     setCurrentVersion(initialVersion);
@@ -198,21 +198,21 @@ const EditFile = () => {
       });
     }
   };
-  
+
   const handleRemarkClick = () => {
     setIsRemarkActive(true);
   };
-  
+
   // Confirmation Popup Component
   const ConfirmationPopup = () => {
     const [localLocked, setLocalLocked] = useState(formData.locked || false);
-    
+
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
           <h3 className="mb-4 text-xl font-bold text-gray-800">Confirm Save</h3>
           <p className="mb-6 text-gray-600">Have you finished updating the student details?</p>
-          
+
           <div className="flex items-center mb-6">
             <input
               type="radio"
@@ -223,7 +223,7 @@ const EditFile = () => {
             />
             <label htmlFor="lockStatus" className="text-gray-700">Set as locked</label>
           </div>
-          
+
           <div className="flex justify-end gap-3">
             <button
               onClick={closeConfirmationPopup}
@@ -251,7 +251,7 @@ const EditFile = () => {
       </div>
     );
   };
-  
+
   return (
     <div>
       {loading ? (
@@ -419,6 +419,8 @@ const EditFile = () => {
                   <option value="AIML">AIML</option>
                   <option value="CYS">CYS</option>
                   <option value="Mech">Mech</option>
+                  <option value="R&A">R&A</option>
+
                 </select>
               ) : (
                 <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 overflow-hidden py-2 rounded-md text-gray-400 outline-none mb-4">
@@ -581,7 +583,7 @@ const EditFile = () => {
               )}
             </div>
           </div>
-          
+
           {/* Confirmation Popup */}
           {showPopup && <ConfirmationPopup />}
         </div>
