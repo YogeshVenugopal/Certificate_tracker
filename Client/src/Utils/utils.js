@@ -17,4 +17,4 @@ export const emailVerification = function(email) {
 //   return "http://localhost:5000";
 // }
 
-export const API_CALL = "http://localhost:5000";
+export const API_CALL = "http://172.16.32.87:5000";
