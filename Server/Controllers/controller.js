@@ -96,8 +96,8 @@ export const createStudent = async (req, res) => {
         );
 
         await pool.query(
-            'INSERT INTO "versions" (student, version_count, student_version, doc_version, date) VALUES ($1, $2, $3, $4, $5)',
-            [admission_no, 0, 0, 0, new Date()]
+            'INSERT INTO "versions" (student, version_count, student_version, doc_version, username, date) VALUES ($1, $2, $3, $4, $5, $6)',
+            [admission_no, 0, 0, 0, username, new Date()]
         );
 
         await pool.query(

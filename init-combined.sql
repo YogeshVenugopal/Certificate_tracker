@@ -76,8 +76,8 @@
         original boolean NOT NULL,
         photocopy boolean NOT NULL,
         count integer NOT NULL,
-        name character varying(100) NOT NULL,
-        username character varying(100) NOT NULL
+        name character varying(100) NOT NULL
+        
     );
 
 
@@ -288,7 +288,8 @@
         version_count integer DEFAULT 0 NOT NULL,
         doc_version integer DEFAULT 0 NOT NULL,
         student_version integer DEFAULT 0 NOT NULL,
-        date date
+        date date,
+        username character varying(100) NOT NULL
     );
 
 
@@ -416,8 +417,8 @@
     -- Name: student_info student_info_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
     --
 
-    ALTER TABLE ONLY public.student_info
-        ADD CONSTRAINT student_info_email_key UNIQUE (email);
+    -- ALTER TABLE ONLY public.student_info
+    --     ADD CONSTRAINT student_info_email_key UNIQUE (email);
 
 
     --
