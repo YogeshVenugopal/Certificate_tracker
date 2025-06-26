@@ -211,7 +211,7 @@ export const createStudent = async (req, res) => {
             `,
         };
 
-        await transporter.sendMail(mailOptions);        
+        await transporter.sendMail(mailOptions);
         await pool.query("COMMIT");
         return res.status(201).json({ message: "Student records inserted successfully" });
 
@@ -428,7 +428,7 @@ export const updateStudent = async (req, res) => {
                     break;
                 }
             }
-        
+
             if (!hasFileChanges) {
                 const existingNames = Object.keys(existingFilesMap);
                 const newNames = files.map(file => file.name);
@@ -468,7 +468,7 @@ export const updateStudent = async (req, res) => {
             "UPDATE student SET version_count = version_count + 1, lock = $1 WHERE admission_no = $2",
             [lock, admission_no]
         );
-    
+
         await pool.query(
             `INSERT INTO student_info (student, name, email, department, student_no, parent_no, parent_name, quota, studies, version, username, date) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
@@ -495,7 +495,7 @@ export const updateStudent = async (req, res) => {
             await pool.query(
                 `INSERT INTO record (name, original, photocopy, count, ver, student, date) 
                     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [name, original, photocopy, count, nextVer, admission_no,new Date()]
+                [name, original, photocopy, count, nextVer, admission_no, new Date()]
             );
         }
 
@@ -612,7 +612,7 @@ export const updateStudent = async (req, res) => {
             `,
         };
 
-        await transporter.sendMail(mailOptions);        
+        await transporter.sendMail(mailOptions);
 
         await pool.query("COMMIT");
         return res.status(201).json({
@@ -775,18 +775,184 @@ export const getPdf = async (req, res) => {
     }
 };
 
-function generatePDF(doc, data) {
+// function generatePDF(doc, data) {
 
+//     const pageHeight = doc.page.height;
+//     const contentPerPage = pageHeight - 100;
+
+
+//     const margin = 30;
+//     doc.fontSize(16).text('STUDENT RECORD', { align: 'center' });
+//     doc.moveDown(0.5);
+
+//     doc.fontSize(8)
+//         .text(`Version: ${data.version_count} | Date: ${new Date(data.date).toLocaleDateString()} | Generated: ${new Date().toLocaleString()}`, { align: 'right' });
+//     doc.moveDown(0.5);
+
+//     doc.fontSize(12).text('Student Information', { underline: true });
+//     doc.moveDown(0.5);
+
+//     const infoTable = {
+//         'Admission No': data.admission_no,
+//         'Name': data.name,
+//         'Department': data.department,
+//         'Studies': data.studies,
+//         'Student Phone': data.student_no,
+//         'Email': data.email,
+//         'Parent Name': data.parent_name,
+//         'Parent Phone': data.parent_no,
+//         'Quota': data.quota === 'MQ' ? 'Management Quota' : 'Government Quota',
+//         'Created By': data.username
+//     };
+
+//     const itemsPerColumn = Math.ceil(Object.keys(infoTable).length / 3);
+//     const column1Data = Object.entries(infoTable).slice(0, itemsPerColumn);
+//     const column2Data = Object.entries(infoTable).slice(itemsPerColumn, itemsPerColumn * 2);
+//     const column3Data = Object.entries(infoTable).slice(itemsPerColumn * 2);
+
+//     const column1X = margin;
+//     const column2X = 210;
+//     const column3X = 400;
+//     const startY = doc.y;
+//     let maxY = startY;
+
+//     doc.fontSize(9);
+//     column1Data.forEach(([key, value]) => {
+//         doc.text(`${key}: `, column1X, doc.y, { continued: true, bold: true })
+//             .text(`${value || 'N/A'}`);
+//         doc.moveDown(0.3);
+//         maxY = Math.max(maxY, doc.y);
+//     });
+
+//     doc.y = startY;
+
+//     column2Data.forEach(([key, value]) => {
+//         doc.text(`${key}: `, column2X, doc.y, { continued: true, bold: true })
+//             .text(`${value || 'N/A'}`);
+//         doc.moveDown(0.3);
+//         maxY = Math.max(maxY, doc.y);
+//     });
+
+//     doc.y = startY;
+
+//     column3Data.forEach(([key, value]) => {
+//         doc.text(`${key}: `, column3X, doc.y, { continued: true, bold: true })
+//             .text(`${value || 'N/A'}`);
+//         doc.moveDown(0.3);
+//         maxY = Math.max(maxY, doc.y);
+//     });
+
+//     doc.y = Math.max(doc.y, maxY);
+//     doc.moveDown(0.5);
+
+//     if (data.records && data.records.length > 0) {
+//         doc.fontSize(12).text('Document Records', { underline: true, align: 'center' });
+//         doc.moveDown(0.3);
+
+//         const colWidths = [30, 300, 60, 60, 50]; 
+
+//         const tableY = doc.y;
+//         const headerHeight = drawTableHeader(doc, tableY, ['S.No', 'Document', 'Original', 'Photocopy', 'Count'], colWidths);
+
+//         let currentY = headerHeight;
+//         data.records.forEach((record, index) => {
+//             const rowData = [
+//                 (index + 1).toString(),
+//                 record.document || record.name,
+//                 record.original ? 'Yes' : 'No',
+//                 record.photocopy ? 'Yes' : 'No',
+//                 record.photocopy ? (record.count || '1') : '-'
+//             ];
+
+//             doc.fontSize(8);
+//             currentY = drawTableRowWithBorders(doc, currentY, rowData, colWidths);
+
+//             if (currentY > 700 && index < data.records.length - 1) {
+//                  drawTableRowWithBorders = function (doc, y, data, widths) {
+//                     let xPos = margin;
+//                     const rowHeight = 15; 
+
+//                     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
+
+//                     data.forEach((text, i) => {
+//                         let cellText = text.toString();
+//                         if (i === 1 && cellText.length > 40) {
+//                             cellText = cellText.substring(0, 37) + '...';
+//                         }
+
+//                         doc.fillColor('#000000')
+//                             .text(cellText, xPos + 2, y + 3, {
+//                                 width: widths[i] - 4,
+//                                 align: i === 0 ? 'center' : i === 1 ? 'left' : 'center',
+//                                 lineBreak: false
+//                             });
+
+//                         doc.moveTo(xPos, y)
+//                             .lineTo(xPos, y + rowHeight)
+//                             .stroke();
+
+//                         xPos += widths[i];
+//                     });
+
+//                     doc.moveTo(xPos, y)
+//                         .lineTo(xPos, y + rowHeight)
+//                         .stroke();
+//                     doc.moveTo(margin, y + rowHeight)
+//                         .lineTo(xPos, y + rowHeight)
+//                         .stroke();
+
+//                     return y + rowHeight;
+//                 };
+//             }
+//         });
+
+//         doc.y = currentY + 5;
+//     } else {
+//         doc.fontSize(9).text('No document records found.');
+//     }
+
+//     if (data.remark) {
+//         if (doc.y < 730) {
+//             doc.moveDown(0.3);
+//             doc.fontSize(12).text('Remarks', { underline: true });
+//             doc.moveDown(0.3);
+
+//             const availableHeight = 780 - doc.y;
+
+//             let remarkText = data.remark;
+//             if (remarkText.length > availableHeight / 3) { 
+//                 remarkText = remarkText.substring(0, availableHeight / 3) + '...';
+//             }
+
+//             doc.fontSize(8).text(remarkText);
+//         }
+//     }
+// }
+function formatDateToDDMMYYYY(date) {
+    // If date is already a string in dd/mm/yyyy format, return it as is
+    if (typeof date === 'string' && /^\ \d{2}\/\d{2}\/\d{4}$/.test(date)) {
+        return date;
+    }
+    // Convert to IST by adding 5.5 hours (UTC+5:30)
+    const istDate = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+    const day = String(istDate.getUTCDate()).padStart(2, '0');
+    const month = String(istDate.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const year = istDate.getUTCFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function generatePDF(doc, data) {
     const pageHeight = doc.page.height;
     const contentPerPage = pageHeight - 100;
-
-
     const margin = 30;
+
     doc.fontSize(16).text('STUDENT RECORD', { align: 'center' });
     doc.moveDown(0.5);
 
-    doc.fontSize(8)
-        .text(`Version: ${data.version_count} | Date: ${new Date(data.date).toLocaleDateString()} | Generated: ${new Date().toLocaleString()}`, { align: 'right' });
+    doc.fontSize(8).text(
+        `Version: ${data.version_count} | Date: ${formatDateToDDMMYYYY(data.date)} | Generated: ${formatDateToDDMMYYYY(new Date())}`,
+        { align: 'right' }
+    );
     doc.moveDown(0.5);
 
     doc.fontSize(12).text('Student Information', { underline: true });
@@ -849,8 +1015,7 @@ function generatePDF(doc, data) {
         doc.fontSize(12).text('Document Records', { underline: true, align: 'center' });
         doc.moveDown(0.3);
 
-        const colWidths = [30, 300, 60, 60, 50]; 
-
+        const colWidths = [30, 300, 60, 60, 50];
         const tableY = doc.y;
         const headerHeight = drawTableHeader(doc, tableY, ['S.No', 'Document', 'Original', 'Photocopy', 'Count'], colWidths);
 
@@ -868,9 +1033,9 @@ function generatePDF(doc, data) {
             currentY = drawTableRowWithBorders(doc, currentY, rowData, colWidths);
 
             if (currentY > 700 && index < data.records.length - 1) {
-                 drawTableRowWithBorders = function (doc, y, data, widths) {
+                drawTableRowWithBorders = function (doc, y, data, widths) {
                     let xPos = margin;
-                    const rowHeight = 15; 
+                    const rowHeight = 15;
 
                     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
 
@@ -920,7 +1085,7 @@ function generatePDF(doc, data) {
             const availableHeight = 780 - doc.y;
 
             let remarkText = data.remark;
-            if (remarkText.length > availableHeight / 3) { 
+            if (remarkText.length > availableHeight / 3) {
                 remarkText = remarkText.substring(0, availableHeight / 3) + '...';
             }
 
@@ -928,12 +1093,11 @@ function generatePDF(doc, data) {
         }
     }
 }
-
 function drawTableHeader(doc, y, headers, widths) {
-    let xPos = 30; 
-    const rowHeight = 18; 
+    let xPos = 30;
+    const rowHeight = 18;
 
-    
+
     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
 
     doc.rect(xPos, y, totalWidth, rowHeight)
@@ -971,20 +1135,20 @@ function drawTableHeader(doc, y, headers, widths) {
 }
 
 function drawTableRowWithBorders(doc, y, data, widths) {
-    let xPos = 30; 
-    const rowHeight = 16; 
+    let xPos = 30;
+    const rowHeight = 16;
 
-    
+
     const totalWidth = widths.reduce((sum, w) => sum + w, 0);
 
     const isEvenRow = Math.floor(y / rowHeight) % 2 === 0;
     doc.rect(xPos, y, totalWidth, rowHeight)
         .fillAndStroke(isEvenRow ? '#ffffff' : '#f9f9f9', '#cccccc');
 
-    doc.fontSize(8); 
+    doc.fontSize(8);
     data.forEach((text, i) => {
         let cellText = text.toString();
-        if (i === 1 && cellText.length > 45) { 
+        if (i === 1 && cellText.length > 45) {
             cellText = cellText.substring(0, 42) + '...';
         }
 
@@ -1103,7 +1267,7 @@ export const generateExcelReport = async (req, res) => {
             { header: 'Last Version By', key: 'version_username', width: 15 },
         ];
 
-        const allUniqueDocTypes = [...new Set(documents.map(doc => doc.name))]; 
+        const allUniqueDocTypes = [...new Set(documents.map(doc => doc.name))];
 
         const studentDocumentGroups = {};
 
@@ -1189,16 +1353,16 @@ export const generateExcelReport = async (req, res) => {
 
             if (remarks === 'yes') {
                 // Ensure remarksData is an array and filter out null/undefined values
-                const studentRemarks = Array.isArray(remarksData) 
-                    ? remarksData.filter(r => r && r.student && r.student.toString() === studentId.toString()) 
+                const studentRemarks = Array.isArray(remarksData)
+                    ? remarksData.filter(r => r && r.student && r.student.toString() === studentId.toString())
                     : [];
-            
+
                 // Check if studentRemarks contains valid remark values
                 rowData.remarks = studentRemarks.length > 0 && studentRemarks.some(r => r.remark)
                     ? studentRemarks.map(r => r.remark || 'No remarks for this student').join(', ')
                     : 'No remarks for this student';
             }
-            
+
             return rowData;
         }
 
