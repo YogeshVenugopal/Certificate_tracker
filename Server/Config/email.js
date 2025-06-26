@@ -15,7 +15,7 @@
         pass: process.env.SMTP_PASS
       },
       tls: {
-          rejectUnauthorized: true
+          rejectUnauthorized: false
       }
     });
 
