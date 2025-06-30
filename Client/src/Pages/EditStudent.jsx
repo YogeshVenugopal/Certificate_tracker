@@ -28,9 +28,6 @@ const EditStudent = () => {
         console.log(data);
         setStudent(data);
       }
-      else {
-        showError('Failed to fetch student data');
-      }
     } catch (error) {
       console.log(error);
       showError('An error occurred while fetching data');

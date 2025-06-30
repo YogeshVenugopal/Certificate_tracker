@@ -2,14 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DocumentTable from '../Components/DocumentTable';
 import { motion } from 'framer-motion';
-import { IoIosArrowBack } from "react-icons/io";
-import { IoIosArrowForward } from "react-icons/io";
-import { IoMdAdd } from "react-icons/io";
+import { IoIosArrowBack, IoIosArrowForward, IoMdAdd } from "react-icons/io";
 import { API_CALL } from '../Utils/utils';
+import { emailVerification } from '../Utils/utils';
 
 const EditFile = () => {
-  const { id } = useParams();
-  const { version } = useParams();
+  const { id, version } = useParams();
   const maxVersion = parseInt(version);
   const [currentVersion, setCurrentVersion] = useState(parseInt(version) || 0);
   const navigate = useNavigate();
@@ -38,18 +36,76 @@ const EditFile = () => {
   const [success, setSuccess] = useState('');
   const [isRemarkActive, setIsRemarkActive] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [parentNoError, setParentNoError] = useState('');
+  const [studentNoError, setStudentNoError] = useState('');
+
+  // Define department options based on program selection
+  const getDepartmentOptions = (programType) => {
+    switch (programType) {
+      case 'UG':
+      case 'LATERAL':
+        return [
+          { value: 'CSE', label: 'CSE' },
+          { value: 'AIDS', label: 'AIDS' },
+          { value: 'ECE', label: 'ECE' },
+          { value: 'IT', label: 'IT' },
+          { value: 'CSBS', label: 'CSBS' },
+          { value: 'AIML', label: 'AIML' },
+          { value: 'CYS', label: 'CYS' },
+          { value: 'Mech', label: 'Mech' },
+          { value: 'R&A', label: 'R&A' }
+        ];
+      case 'PG_MBA':
+        return [
+          { value: 'PG_MBA', label: 'PG - MBA' }
+        ];
+      case 'PG_ME':
+        return [
+          { value: 'ME_CSE', label: 'ME - CSE' },
+          { value: 'ME_AE', label: 'ME - AE' }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Handle program change
+  const handleProgramChange = (e) => {
+    const selectedProgram = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      studies: selectedProgram,
+      department: selectedProgram === 'PG_MBA' ? 'PG_MBA' : ''
+    }));
+  };
+
+  // Get current department options
+  const departmentOptions = getDepartmentOptions(formData.studies);
+
+  // Handle phone number input validation
+  const handlePhoneNumberChange = (e, field) => {
+    const value = e.target.value;
+    if (value === '' || /^\d+$/.test(value)) {
+      setFormData({ ...formData, [field]: value });
+      if (field === 'parent_no') {
+        setParentNoError(value.length !== 10 && value ? 'Phone number must be 10 digits' : '');
+      } else if (field === 'student_no') {
+        setStudentNoError(value.length !== 10 && value ? 'Phone number must be 10 digits' : '');
+      }
+    }
+  };
 
   const handleEdit = () => {
     if (currentVersion === maxVersion) {
       setEditMode(!editMode);
       if (editMode) {
         setIsRemarkActive(false);
+      } else {
+        setIsRemarkActive(!!formData.remark);
       }
     } else {
       setError('You can only edit the latest version of this document');
-      setTimeout(() => {
-        setError('');
-      }, 5000);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -57,7 +113,31 @@ const EditFile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleRemarkClick = () => {
+    setIsRemarkActive(true);
+  };
+
   const openConfirmationPopup = () => {
+    if (!formData.name || !formData.parent_name || !formData.email || !formData.parent_no || !formData.student_no || !formData.studies || !formData.department || !formData.quota) {
+      setError('All fields are required');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    if (!emailVerification(formData.email)) {
+      setError('Please enter a valid email');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    if (formData.parent_no.length !== 10) {
+      setError('Parent phone number must be exactly 10 digits');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+    if (formData.student_no.length !== 10) {
+      setError('Student phone number must be exactly 10 digits');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     setShowPopup(true);
   };
 
@@ -72,9 +152,10 @@ const EditFile = () => {
     const dataToSend = {
       ...formData,
       locked: lockStatus,
-      modifier: storedUser
+      modifier: storedUser,
+      parent_no: parseInt(formData.parent_no, 10),
+      student_no: parseInt(formData.student_no, 10)
     };
-    console.log("Sending data", dataToSend);
 
     try {
       const response = await fetch(`${API_CALL}/updateStudent/${id}`, {
@@ -88,24 +169,17 @@ const EditFile = () => {
         setEditMode(false);
         setSuccess('Student data updated successfully');
         setIsRemarkActive(false);
-
         setTimeout(() => {
           setSuccess('');
           navigate(-1);
         }, 2000);
       } else {
-        console.error("Failed to update student data");
         setError('Failed to save the student changes...!');
-        setTimeout(() => {
-          setError('');
-        }, 5000);
+        setTimeout(() => setError(''), 5000);
       }
     } catch (error) {
-      console.error("Update error:", error);
-      setError('Failed to save the student changes...!', error);
-      setTimeout(() => {
-        setError('');
-      }, 5000);
+      setError('Failed to save the student changes: ' + error.message);
+      setTimeout(() => setError(''), 5000);
     } finally {
       setSavingLoading(false);
     }
@@ -114,7 +188,7 @@ const EditFile = () => {
   const handleVersionChange = (increment) => {
     const newVersion = currentVersion + increment;
     if (newVersion >= 0 && newVersion <= maxVersion) {
-      setCurrentVersion(newVersion)
+      setCurrentVersion(newVersion);
       fetchStudentData(newVersion);
       if (newVersion !== maxVersion) {
         setEditMode(false);
@@ -134,25 +208,16 @@ const EditFile = () => {
       if (response.ok) {
         const resData = await response.json();
         setFormData(resData);
-        console.log('resData:', resData);
-        console.log('getting:', formData);
+        setIsRemarkActive(!!resData.remark);
         setSuccess('Fetched student data successfully');
-        setTimeout(() => {
-          setSuccess('');
-        }, 5000);
+        setTimeout(() => setSuccess(''), 5000);
       } else {
-        console.log("Process failed");
         setError('Failed to fetch student data');
-        setTimeout(() => {
-          setError('');
-        }, 5000);
+        setTimeout(() => setError(''), 5000);
       }
     } catch (error) {
-      console.log("Fetch error:", error);
       setError('Error fetching student data: ' + error.message);
-      setTimeout(() => {
-        setError('');
-      }, 5000);
+      setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
     }
@@ -164,26 +229,17 @@ const EditFile = () => {
     fetchStudentData(initialVersion);
   }, [id, version]);
 
-
   function formatDate(isoDateString) {
     const date = new Date(isoDateString);
-
-    // Extract date components
-    const day = String(date.getUTCDate()).padStart(2, '0'); // Use UTC methods for consistent results
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
     const year = date.getUTCFullYear();
-
-    // Format the date and time
-    const formattedDate = `${day}-${month}-${year}`;
-
-    return `${formattedDate}`;
+    return `${day}-${month}-${year}`;
   }
-
 
   const updateFileData = (index, field, value) => {
     if (formData.files && formData.files.length > 0) {
       const updatedFiles = [...formData.files];
-
       if (field === 'fileObject') {
         updatedFiles[index] = value;
       } else {
@@ -192,15 +248,8 @@ const EditFile = () => {
           [field]: value
         };
       }
-      setFormData({
-        ...formData,
-        files: updatedFiles
-      });
+      setFormData({ ...formData, files: updatedFiles });
     }
-  };
-
-  const handleRemarkClick = () => {
-    setIsRemarkActive(true);
   };
 
   // Confirmation Popup Component
@@ -212,7 +261,6 @@ const EditFile = () => {
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
           <h3 className="mb-4 text-xl font-bold text-gray-800">Confirm Save</h3>
           <p className="mb-6 text-gray-600">Have you finished updating the student details?</p>
-
           <div className="flex items-center mb-6">
             <input
               type="radio"
@@ -223,7 +271,6 @@ const EditFile = () => {
             />
             <label htmlFor="lockStatus" className="text-gray-700">Set as locked</label>
           </div>
-
           <div className="flex justify-end gap-3">
             <button
               onClick={closeConfirmationPopup}
@@ -288,7 +335,7 @@ const EditFile = () => {
             </motion.div>
           )}
 
-          <div className='flex flex-wrap items-center justify-center w-full h-auto gap-10 my-5 mt-5'>
+          <div className='flex flex-wrap items-center justify-center w-full h-auto gap-10 mt-5'>
             <div>
               <label htmlFor="studentName" className="block mb-1 font-bold text-gray-700">
                 Student Name:
@@ -305,19 +352,17 @@ const EditFile = () => {
                 />
               ) : (
                 <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
-                  <p className='mx-2 text-gray-400'>{formData.name}</p>
+                  <p className='mx-2 text-gray-400'>{formData.name || 'N/A'}</p>
                 </div>
               )}
             </div>
             <div>
               <label htmlFor="admissionNo" className="block mb-1 font-bold text-gray-700">
-                Admission No:
+                Admission Number:
               </label>
-
               <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
-                <p className='mx-2 text-gray-400'>{formData.admission_no}</p>
+                <p className='mx-2 text-gray-400'>{formData.admission_no || 'N/A'}</p>
               </div>
-
             </div>
             <div>
               <label htmlFor="parentName" className="block mb-1 font-bold text-gray-700">
@@ -335,32 +380,12 @@ const EditFile = () => {
                 />
               ) : (
                 <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
-                  <p className='mx-2 text-gray-400'>{formData.parent_name}</p>
+                  <p className='mx-2 text-gray-400'>{formData.parent_name || 'N/A'}</p>
                 </div>
               )}
             </div>
             <div>
-              <label htmlFor="parentNo" className="block mb-1 font-bold text-gray-700">
-                Parent No:
-              </label>
-              {editMode ? (
-                <input
-                  className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
-                  type="text"
-                  name="parent_no"
-                  id="parentNo"
-                  placeholder="Enter Parent No"
-                  value={formData.parent_no || ""}
-                  onChange={handleChange}
-                />
-              ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 overflow-hidden px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
-                  <p className='mx-2 text-gray-400'>{formData.parent_no}</p>
-                </div>
-              )}
-            </div>
-            <div>
-              <label htmlFor="email" className="block mb-1 font-bold text-gray-700">
+              <label htmlFor="personalEmail" className="block mb-1 font-bold text-gray-700">
                 Personal Email:
               </label>
               {editMode ? (
@@ -368,20 +393,44 @@ const EditFile = () => {
                   className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
                   type="email"
                   name="email"
-                  id="email"
-                  placeholder="Enter Email"
+                  id="personalEmail"
+                  placeholder="Enter Personal Email"
                   value={formData.email || ""}
                   onChange={handleChange}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 overflow-hidden px-3 py-2 rounded-md text-gray-400 outline-none mb-4'>
-                  <p className='mx-2 text-gray-400'>{formData.email}</p>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
+                  <p className='mx-2 text-gray-400'>{formData.email || 'N/A'}</p>
                 </div>
               )}
             </div>
             <div>
+              <label htmlFor="parentNo" className="block mb-1 font-bold text-gray-700">
+                Parent Mobile Number:
+              </label>
+              {editMode ? (
+                <input
+                  className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
+                  type="text"
+                  name="parent_no"
+                  id="parentNo"
+                  placeholder="Enter Parent Mobile Number (10 digits)"
+                  value={formData.parent_no || ""}
+                  onChange={(e) => handlePhoneNumberChange(e, 'parent_no')}
+                  maxLength={10}
+                />
+              ) : (
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
+                  <p className='mx-2 text-gray-400'>{formData.parent_no || 'N/A'}</p>
+                </div>
+              )}
+              {parentNoError && editMode && (
+                <p className="text-xs text-red-500">{parentNoError}</p>
+              )}
+            </div>
+            <div>
               <label htmlFor="studentNo" className="block mb-1 font-bold text-gray-700">
-                Student No:
+                Student Mobile Number:
               </label>
               {editMode ? (
                 <input
@@ -389,13 +438,41 @@ const EditFile = () => {
                   type="text"
                   name="student_no"
                   id="studentNo"
-                  placeholder="Enter Your student Number..."
+                  placeholder="Enter Student Mobile Number (10 digits)"
                   value={formData.student_no || ""}
-                  onChange={handleChange}
+                  onChange={(e) => handlePhoneNumberChange(e, 'student_no')}
+                  maxLength={10}
                 />
               ) : (
-                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 overflow-hidden py-2 rounded-md text-gray-400 outline-none mb-4'>
-                  <p className='mx-2 text-gray-400'>{formData.student_no}</p>
+                <div className='border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden'>
+                  <p className='mx-2 text-gray-400'>{formData.student_no || 'N/A'}</p>
+                </div>
+              )}
+              {studentNoError && editMode && (
+                <p className="text-xs text-red-500">{studentNoError}</p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="studies" className="block mb-1 font-bold text-gray-700">
+                Program:
+              </label>
+              {editMode ? (
+                <select
+                  className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
+                  name="studies"
+                  id="studies"
+                  value={formData.studies || ""}
+                  onChange={handleProgramChange}
+                >
+                  <option value="">Select Program</option>
+                  <option value="UG">UG - Regular</option>
+                  <option value="PG_MBA">PG - MBA</option>
+                  <option value="PG_ME">PG - ME</option>
+                  <option value="LATERAL">UG - LATERAL</option>
+                </select>
+              ) : (
+                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden">
+                  <p className="mx-2 text-gray-400">{formData.studies || 'N/A'}</p>
                 </div>
               )}
             </div>
@@ -410,21 +487,18 @@ const EditFile = () => {
                   id="dept"
                   value={formData.department || ""}
                   onChange={handleChange}
+                  disabled={!formData.studies || formData.studies === 'PG_MBA'}
                 >
-                  <option value="CSE">CSE</option>
-                  <option value="AIDS">AIDS</option>
-                  <option value="ECE">ECE</option>
-                  <option value="IT">IT</option>
-                  <option value="CSBS">CSBS</option>
-                  <option value="AIML">AIML</option>
-                  <option value="CYS">CYS</option>
-                  <option value="Mech">Mech</option>
-                  <option value="R&A">R&A</option>
-
+                  <option value="">Select Department</option>
+                  {departmentOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               ) : (
-                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 overflow-hidden py-2 rounded-md text-gray-400 outline-none mb-4">
-                  <p className="mx-2 text-gray-400">{formData.department}</p>
+                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden">
+                  <p className="mx-2 text-gray-400">{formData.department || 'N/A'}</p>
                 </div>
               )}
             </div>
@@ -440,36 +514,13 @@ const EditFile = () => {
                   value={formData.quota || ""}
                   onChange={handleChange}
                 >
+                  <option value="">Select Quota</option>
                   <option value="MQ">Management Quota</option>
                   <option value="GQ">Government Quota</option>
                 </select>
               ) : (
-                <div className="border-2 border-gray-100 w-[250px] overflow-hidden bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4">
-                  <p className="mx-2 text-gray-400">
-                    {formData.quota === "MQ" ? "Management Quota" : "Government Quota"}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div>
-              <label htmlFor="studies" className="block mb-1 font-bold text-gray-700">
-                Studies:
-              </label>
-              {editMode ? (
-                <select
-                  className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
-                  name="studies"
-                  id="studies"
-                  value={formData.studies || ""}
-                  onChange={handleChange}
-                >
-                  <option value="UG">UG</option>
-                  <option value="PG">PG</option>
-                  <option value="MBA">MBA</option>
-                </select>
-              ) : (
-                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none  overflow-hidden mb-4">
-                  <p className="mx-2 text-gray-400">{formData.studies}</p>
+                <div className="border-2 border-gray-100 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-400 outline-none mb-4 overflow-hidden">
+                  <p className="mx-2 text-gray-400">{formData.quota || 'N/A'}</p>
                 </div>
               )}
             </div>
@@ -478,9 +529,7 @@ const EditFile = () => {
             {!editMode && formData.username && (
               <div className="flex justify-center w-full mb-4">
                 <div className="px-4 py-2 text-black bg-blue-100 border border-blue-300 rounded-md">
-                  <span className="font-bold">{
-                    currentVersion === 0 ? 'Created by:' : 'Modified by:'
-                  }</span> {formData.username} on {formatDate(formData.date)}
+                  <span className="font-bold">{currentVersion === 0 ? 'Created by:' : 'Modified by:'}</span> {formData.username} on {formatDate(formData.date)}
                 </div>
               </div>
             )}
@@ -494,7 +543,7 @@ const EditFile = () => {
                   <IoIosArrowBack />
                 </button>
                 <div className="flex items-center justify-center h-full px-4 py-2 font-bold text-gray-700 bg-blue-200 border-t border-b border-blue-300">
-                  Version{currentVersion}
+                  Version {currentVersion}
                 </div>
                 <button
                   className="h-full px-3 py-2.5 font-bold text-white bg-blue-500 rounded-r-md disabled:opacity-50"
@@ -514,47 +563,42 @@ const EditFile = () => {
               updateFileData={updateFileData}
             />
           )}
-          {/* Edit mode remarks section */}
-          {editMode && (
-            <div className="mx-10 my-6">
-              {!formData.remark && !isRemarkActive ? (
-                <div
-                  onClick={handleRemarkClick}
-                  className="flex flex-col items-center justify-center w-full p-6 text-gray-500 border-2 border-gray-400 border-dashed rounded-md cursor-pointer hover:bg-gray-50"
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    <IoMdAdd className="w-10 h-10 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">Add a remark</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full">
-                  <label htmlFor="remark" className="block mb-2 font-bold text-gray-700">
-                    Remark:
-                  </label>
-                  <textarea
-                    className="w-full px-4 py-3 text-gray-600 border-2 border-gray-400 rounded-md bg-gray-50 focus:outline-none focus:border-blue-500"
-                    name="remark"
-                    id="remark"
-                    rows={4}
-                    placeholder="Enter your remarks about this student..."
-                    value={formData.remark || ""}
-                    onChange={handleChange}
-                  ></textarea>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* Non-edit mode remarks section */}
-          {!editMode && formData.remark && (
-            <div className="mx-10 my-6">
+          {/* Remarks Section */}
+          <div className="mx-10 my-6">
+            {editMode && (!formData.remark && !isRemarkActive) ? (
+              <div
+                onClick={handleRemarkClick}
+                className="flex flex-col items-center justify-center w-full p-6 text-gray-500 border-2 border-gray-400 border-dashed rounded-md cursor-pointer hover:bg-gray-50"
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <IoMdAdd className="w-10 h-10 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">Add a remark</p>
+                </div>
+              </div>
+            ) : editMode ? (
+              <div className="w-full">
+                <label htmlFor="remark" className="block mb-2 font-bold text-gray-700">
+                  Remark:
+                </label>
+                <textarea
+                  className="w-full px-4 py-3 text-gray-600 border-2 border-gray-400 rounded-md bg-gray-50 focus:outline-none focus:border-blue-500"
+                  name="remark"
+                  id="remark"
+                  rows={4}
+                  placeholder="Enter your remarks about this student..."
+                  value={formData.remark || ""}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+            ) : formData.remark ? (
               <div className="p-4 bg-gray-100 border border-gray-300 rounded-md">
                 <h3 className="mb-2 text-lg font-bold text-gray-700">Remark:</h3>
                 <p className="text-gray-600">{formData.remark}</p>
               </div>
-            </div>
-          )}
+            ) : null}
+          </div>
+
           <div className="flex items-center justify-between mx-10 my-5">
             <div className="flex items-center">
               {editMode ? (
@@ -584,7 +628,6 @@ const EditFile = () => {
             </div>
           </div>
 
-          {/* Confirmation Popup */}
           {showPopup && <ConfirmationPopup />}
         </div>
       )}

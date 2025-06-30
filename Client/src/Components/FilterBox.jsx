@@ -99,10 +99,10 @@ const FilterBox = () => {
                 value={filters.categories}
                 onChange={handleChange}
               >
-                <option value="UG">UG</option>
+                <option value="UG">UG - Regular</option>
                 <option value="PG_MBA">PG-MBA</option>
                 <option value="PG_ME">PG-ME</option>
-                <option value="LATERAL">LATERAL</option>
+                <option value="LATERAL">UG - LATERAL</option>
               </select>
             </div>
           </div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { emailVerification } from '../Utils/utils';
 import { motion } from 'framer-motion';
-import { IoMdAdd } from 'react-icons/io'; // Added import for the icon
 import sampleImg from '../assets/sampleImage.png';
 import GetDocument from '../Components/GetDocument';
 import { API_CALL } from '../Utils/utils';
@@ -30,6 +29,53 @@ const NewEntry = () => {
   const [remark, setRemark] = useState(null);
   const [isRemarkActive, setIsRemarkActive] = useState(false);
   const user = JSON.parse(localStorage.getItem('user'));
+
+  // Define department options based on program selection
+  const getDepartmentOptions = (programType) => {
+    switch (programType) {
+      case 'UG':
+      case 'LATERAL':
+        return [
+          { value: 'CSE', label: 'CSE' },
+          { value: 'AIDS', label: 'AIDS' },
+          { value: 'ECE', label: 'ECE' },
+          { value: 'IT', label: 'IT' },
+          { value: 'CSBS', label: 'CSBS' },
+          { value: 'AIML', label: 'AIML' },
+          { value: 'CYS', label: 'CYS' },
+          { value: 'Mech', label: 'Mech' },
+          { value: 'R&A', label: 'R&A' }
+        ];
+      case 'PG_MBA':
+        return [
+          { value: 'PG_MBA', label: 'PG - MBA' }
+        ];
+      case 'PG_ME':
+        return [
+          { value: 'ME_CSE', label: 'ME - CSE' },
+          { value: 'ME_AE', label: 'ME - AE' }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Handle program change
+  const handleProgramChange = (e) => {
+    const selectedProgram = e.target.value;
+    setStudies(selectedProgram);
+
+    // Auto-select department for MBA
+    if (selectedProgram === 'PG_MBA') {
+      setDept('PG_MBA');
+    } else {
+      // Reset department selection for other programs
+      setDept('');
+    }
+  };
+
+  // Get current department options
+  const departmentOptions = getDepartmentOptions(studies);
 
   // Load saved form data when component mounts
   useEffect(() => {
@@ -303,7 +349,7 @@ const NewEntry = () => {
       <form onSubmit={handleSubmit} className='font-semibold'>
         <div className='flex flex-wrap items-center justify-center w-full h-auto gap-10 mt-5'>
           <div>
-            <label htmlFor="studentName" className="block mb-1 font-bold text-gray-700">
+            <label htmlFor="studentName" className="block mb-1 text-gray-700 font-bo ld">
               Student Name:
             </label>
             <input
@@ -395,6 +441,24 @@ const NewEntry = () => {
             )}
           </div>
           <div>
+            <label htmlFor="studies" className="block mb-1 font-bold text-gray-700">
+              Program:
+            </label>
+            <select
+              className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
+              name="studies"
+              id="studies"
+              value={studies}
+              onChange={handleProgramChange}
+            >
+              <option value="">Select Program</option>
+              <option value="UG">UG - Regular</option>
+              <option value="PG_MBA">PG - MBA</option>
+              <option value="PG_ME">PG - ME</option>
+              <option value="LATERAL">UG - LATERAL</option>
+            </select>
+          </div>
+          <div>
             <label htmlFor="dept" className="block mb-1 font-bold text-gray-700">
               Department:
             </label>
@@ -404,17 +468,14 @@ const NewEntry = () => {
               id="dept"
               value={dept}
               onChange={(e) => setDept(e.target.value)}
+              disabled={!studies || studies === 'PG_MBA'}
             >
               <option value="">Select Department</option>
-              <option value="CSE">CSE</option>
-              <option value="AIDS">AIDS</option>
-              <option value="ECE">ECE</option>
-              <option value="IT">IT</option>
-              <option value="CSBS">CSBS</option>
-              <option value="AIML">AIML</option>
-              <option value="CYS">CYS</option>
-              <option value="Mech">Mech</option>
-              <option value="R&A">R&A</option>
+              {departmentOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
           <div>
@@ -433,24 +494,7 @@ const NewEntry = () => {
               <option value="GQ">Government Quota</option>
             </select>
           </div>
-          <div>
-            <label htmlFor="studies" className="block mb-1 font-bold text-gray-700">
-              Studies:
-            </label>
-            <select
-              className="border-2 border-gray-400 w-[250px] bg-gray-200 px-3 py-2 rounded-md text-gray-600 outline-none mb-4"
-              name="studies"
-              id="studies"
-              value={studies}
-              onChange={(e) => setStudies(e.target.value)}
-            >
-              <option value="">Select Studies</option>
-              <option value="UG">UG</option>
-              <option value="PG_MBA">PG - MBA</option>
-              <option value="PG_ME">PG - ME</option>
-              <option value="LATERAL">LATERAL</option>
-            </select>
-          </div>
+
           {quota === "GQ" && (studies === "UG" || studies === "LATERAL") && (<div>
             <label htmlFor="firstGraduation" className="block mb-1 font-bold text-gray-700">
               First Graduation:
@@ -468,7 +512,7 @@ const NewEntry = () => {
             </select>
           </div>)}
           {studies === "PG_ME" && (<div>
-            <label htmlFor="firstGraduation" className="block mb-1 font-bold text-gray-700">
+            <label htmlFor="diploma" className="block mb-1 font-bold text-gray-700">
               Diploma:
             </label>
             <select
@@ -524,42 +568,19 @@ const NewEntry = () => {
         </div>
       )}
       {showTable ? (
-        <>
-          <GetDocument 
-            selectedDocs={selectedDocs} 
-            setSelectedDocs={setSelectedDocs} 
-            handleSubmitStudent={handleSubmitStudent} 
-            loading1={loading1} 
-            setLoading1={setLoading1} 
-          />
-          
-          {!isRemarkActive ? (
-            <div
-              onClick={handleRemarkClick}
-              className="flex flex-col items-center justify-center w-[80%] p-6 my-5 text-gray-500 border-2 border-gray-400 border-dashed rounded-md cursor-pointer hover:bg-gray-50 mx-auto"
-            >
-              <div className="flex flex-col items-center justify-center">
-                <IoMdAdd className="w-10 h-10 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-500">Add a remark</p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-[80%] mx-auto mt-4 mb-6">
-              <label htmlFor="remark" className="block mb-2 font-bold text-gray-700">
-                Remark:
-              </label>
-              <textarea
-                className="w-full px-4 py-3 text-gray-600 border-2 border-gray-400 rounded-md bg-gray-50 focus:outline-none focus:border-blue-500"
-                name="remark"
-                id="remark"
-                rows={4}
-                placeholder="Enter your remarks about this student..."
-                value={remark}
-                onChange={handleChange}
-              ></textarea>
-            </div>
-          )}
-        </>
+        <GetDocument
+          selectedDocs={selectedDocs}
+          setSelectedDocs={setSelectedDocs}
+          handleSubmitStudent={handleSubmitStudent}
+          loading1={loading1}
+          setLoading1={setLoading1}
+          isRemarkActive={isRemarkActive}
+          setIsRemarkActive={setIsRemarkActive}
+          remark={remark}
+          setRemark={setRemark}
+          handleRemarkClick={handleRemarkClick}
+          handleChange={handleChange}
+        />
       ) : (
         <div className='relative flex items-center justify-center w-full h-auto'>
           <motion.div

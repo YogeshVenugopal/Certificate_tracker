@@ -86,7 +86,7 @@ const Table = ({ type, studentData }) => {
                 <th className='w-[30%] text-center'>STUDENT NAME</th>
                 <th className='w-[20%] text-center'>ADMISSION NO.</th>
                 <th className='w-[10%] text-center'>DEPARTMENT</th>
-                <th className='w-[10%] text-center'>STUDIES</th>
+                <th className='w-[10%] text-center'>PROGRAM</th>
                 <th className='w-[10%] text-center'>VERSION</th>
                 <th className='w-[10%] text-center'>ACTION</th>
               </tr>

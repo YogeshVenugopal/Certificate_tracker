@@ -1,4 +1,6 @@
 import React from "react";
+import { IoMdAdd } from 'react-icons/io';
+
 const DocumentRow = ({ doc, index, handleCheckboxChange, handleCountChange }) => {
   return (
     <tr className="text-center bg-gray-50 even:bg-gray-100">
@@ -36,7 +38,8 @@ const DocumentRow = ({ doc, index, handleCheckboxChange, handleCountChange }) =>
     </tr>
   );
 };
-const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent, loading1, setLoading1}) => {
+
+const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent, loading1, setLoading1, isRemarkActive, setIsRemarkActive, remark, setRemark, handleRemarkClick, handleChange }) => {
   const handleCheckboxChange = (id, field) => {
     setSelectedDocs((prevDocs) =>
       prevDocs.map((doc) =>
@@ -81,8 +84,8 @@ const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent, loadi
         <tbody>
           {selectedDocs.map((doc, index) => (
             <DocumentRow
-              key={index} // Use the index as key (not ideal for long-term use)
-              doc={doc}
+              key={index}
+ vecka            doc={doc}
               index={index}
               handleCheckboxChange={handleCheckboxChange}
               handleCountChange={handleCountChange}
@@ -90,6 +93,33 @@ const GetDocument = ({ selectedDocs, setSelectedDocs, handleSubmitStudent, loadi
           ))}
         </tbody>
       </table>
+
+      {!isRemarkActive ? (
+        <div
+          onClick={handleRemarkClick}
+          className="flex flex-col items-center justify-center w-[80%] p-6 my-5 text-gray-500 border-2 border-gray-400 border-dashed rounded-md cursor-pointer hover:bg-gray-50 mx-auto"
+        >
+          <div className="flex flex-col items-center justify-center">
+            <IoMdAdd className="w-10 h-10 text-gray-400" />
+            <p className="mt-2 text-sm text-gray-500">Add a remark</p>
+          </div>
+        </div>
+      ) : (
+        <div className="w-[80%] mx-auto mt-4 mb-6">
+          <label htmlFor="remark" className="block mb-2 font-bold text-gray-700">
+            Remark:
+          </label>
+          <textarea
+            className="w-full px-4 py-3 text-gray-600 border-2 border-gray-400 rounded-md bg-gray-50 focus:outline-none focus:border-blue-500"
+            name="remark"
+            id="remark"
+            rows={4}
+            placeholder="Enter your remarks about this student..."
+            value={remark}
+            onChange={handleChange}
+          ></textarea>
+        </div>
+      )}
 
       <button
         onClick={onSubmit}
